@@ -16,9 +16,9 @@ data_dir = "data"
 label_dir = "labels_raw_csv"
 splits_csv_names = [
     "Mass-Test"
-    , "Mass-Train"
+    , "Mass-Training"
     , "Calc-Test"
-    , "Calc-Train"
+    , "Calc-Training"
 ]
 
 def get_label_fn_parameters(prefix):
