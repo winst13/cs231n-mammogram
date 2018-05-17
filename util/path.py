@@ -1,6 +1,7 @@
 import os
 from os.path import join, isdir, exists
 
+
 def ensure_dir_created(*args):
     for path in args:
         # os.makedirs: Recursively make intermediate dirs if necessary
