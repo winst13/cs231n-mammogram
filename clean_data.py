@@ -10,6 +10,9 @@ from util.image import normalize_between
 from util.path import get_the_only_directory_under
 
 
+def print(*args, **kwargs):
+    return __builtin__.print("[clean_data]", *args, **kwargs)
+
 # Constants for this script
 data_dir = "data"
 _dicom_imgname = "000000.dcm" # This seems to be the name for all of them

@@ -1,4 +1,3 @@
-
 import csv
 import numpy as np
 import os
@@ -6,6 +5,12 @@ from os.path import join
 from shutil import copyfile
 
 from util.path import ensure_dir_created
+
+
+# Overload the print function
+def print(*args, **kwargs):
+    return __builtins__.print("[label_data]", *args, **kwargs)
+
 
 data_dir = "data"
 label_dir = "labels_raw_csv"
@@ -18,10 +23,6 @@ splits_csv_names = [
 
 def get_label_fn_parameters(prefix):
     def csvpath(p): return join(label_dir, prefix + '.csv')
-    #def outpath(p): return join(data_dir, prefix + "-out")
-    #def outpath_for_jpg(p): return join(data_dir, prefix + "-out-jpg")
-    #return prefix, datapath(prefix), outpath(prefix), outpath_for_jpg(prefix)
-
     return prefix, csvpath(prefix)
 
 def get_csvreader_from_filepath(path):
@@ -42,6 +43,7 @@ def get_label(row):
     else:
         raise ValueError("Unrecognized field, cannot tell if benign (0) or mal. (1)")
 
+
 def construct_sample_name(row):
     """ param |row|: An OrderedDict representing one row in the csv.
         string tuples of (fieldname, content).
@@ -52,11 +54,11 @@ def construct_sample_name(row):
     assert LR in ("LEFT", "RIGHT")
     view = row["image view"]
     assert view in ("MLO", "CC")
-    # Note, dangerous: Abusing python scope w/ _curr_prefix
+    # Note, be careful: Abusing python scope w/ _curr_prefix variable
     sample_name = '_'.join([_curr_prefix, patient_id, LR, view])
     # e.g. "Mass-Test_P_00296_LEFT_MLO"
 
-    print("Found row in csv with sample name:", sample_name)
+    #print("Found row in csv with sample name:", sample_name)
     return sample_name
 
 
@@ -64,7 +66,7 @@ def build_sample_to_class_map(reader):
     sample_to_class = {}
     for row in reader:
         sample_name = construct_sample_name(row)
-        class_label = get_label(row)
+        class_label = get_label(row)  # int: 0 or 1
 
         # Collect all labels for the tumor(s) in that mammogram
         if sample_name in sample_to_class:
@@ -74,13 +76,21 @@ def build_sample_to_class_map(reader):
 
     # Deal with multiple labels for one mammogram:
     #   All agree on label = keep, otherwise discard sample
+    final_sample_to_class = {}
     for sample, classes in sample_to_class.items():
         if len(classes) == 1:
+            final_sample_to_class[sample] = classes[0]
             continue
 
-        @
-
-    return sample_to_class
+        if (sum(classes) - len(classes)) % len(classes) == 0: # all 0 or all 1
+            #print("All agree! sum classes:", sum(classes), "len classes:", len(classes))
+            #print("The class we determined was", classes[0])
+            final_sample_to_class[sample] = classes[0]
+        else:
+            #print("Sample did not agree, skipping. classes:", classes)
+            pass
+    
+    return final_sample_to_class
 
 
 def setup_directories(prefix):
@@ -103,16 +113,23 @@ def assign_labels(split_prefix, csvpath):
     unsorted_split_files = [name for name in os.listdir(split_output_dir) if name.endswith('.npy')]
     print("Found %d samples under %s." % (len(unsorted_split_files), split_output_dir))
 
-    assert len(unsorted_split_files) == len(labeled_samples) # Sanity check: label for every sample?
+    # Sanity warning: label for every sample? No, bc some may have been discarded with conflicting labels
+    if len(unsorted_split_files) != len(labeled_samples):
+        print("[WARNING] nb files in data split:", len(unsorted_split_files), "Number of labels:", len(labeled_samples))
 
-    for fname in unsorted_split_files:
-        sample_id = fname[:-4]   # Remove the .npy extension
+    counter = 0
+    for sample_id in labeled_samples:
+        fname = sample_id + '.npy'  # Add the .npy extension
         klass = labeled_samples[sample_id]
         dstpath = join(class0_dir if klass == 0 else class1_dir, fname)
         srcpath = join(split_output_dir, fname)
+        
+        if counter % 20 == 0:
+            print("%04d: Copying %s to %s..." % (counter, srcpath, dstpath))
 
         #os.rename(srcpath, dstpath) # Too dangerous, just copy it first
         copyfile(srcpath, dstpath)
+        counter += 1
     
 
 
@@ -120,8 +137,10 @@ def assign_labels(split_prefix, csvpath):
 
 if __name__ == "__main__":
     for _curr_prefix in splits_csv_names:
+        print("Working with data split:", _curr_prefix)
         parameters = get_label_fn_parameters(_curr_prefix)
         assign_labels(*parameters)
-
-        print("We are still debugging! Breaking early")
-        break
+        
+        print("****************")
+        print("*     Done!    *")
+        print("****************")
