@@ -8,6 +8,12 @@ import os
 
 class MammogramDataset(Dataset):
     def __init__(self, root_dir, dataset, tranform = None):
+        """ Params:
+            |root_dir|: The dir under which we have the 
+                training and test splits, usually [reporoot]/data/
+            |dataset|: one of "train", "test"
+            |transform|: A function which is applied to each datapoint before retrieval, if provided.
+        """
         self.root_dir = root_dir
         self.dataset = dataset
         self.tranform = tranform
