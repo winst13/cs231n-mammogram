@@ -9,7 +9,7 @@ from matplotlib import pyplot as plt
 from util.image import normalize_between
 from util.path import get_the_only_directory_under
 
-
+# Overload the print function
 def print(*args, **kwargs):
     return __builtin__.print("[clean_data]", *args, **kwargs)
 
