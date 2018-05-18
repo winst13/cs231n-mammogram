@@ -10,8 +10,8 @@ from util.image import normalize_between
 from util.path import get_the_only_directory_under
 
 # Overload the print function
-def print(*args, **kwargs):
-    return __builtin__.print("[clean_data]", *args, **kwargs)
+#def print(*args, **kwargs):
+#    return __builtin__.print("[clean_data]", *args, **kwargs)
 
 # Constants for this script
 data_dir = "data"
@@ -80,7 +80,7 @@ def preprocess_for_jpg(imgarray, resize=None):
     return imgarray
 
 def save_plot_of_datapoint_shapes(shape_datapts, plot_save_path):
-    plt.plot(*zip(*shape_datapts))
+    plt.plot(*zip(*shape_datapts), 'bo')
     plt.xlabel("Width (pixels)")
     plt.ylabel("Height (pixels)")
     plt.savefig(plot_save_path)
