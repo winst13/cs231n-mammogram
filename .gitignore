@@ -1,6 +1,9 @@
 # Data files
 data/*
 
+#emacs junk
+*~
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
