@@ -103,4 +103,7 @@ def train(model_fn, params, learning_rate):
             val_model() #NEEDS WORK
         epoch += 1
         
+def test(model_fn, params):
+    
+        
 
