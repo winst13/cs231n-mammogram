@@ -23,6 +23,7 @@ parser.add_argument("--batch_size", default = 10, type=int, help="Batch size")
 parser.add_argument("--val_ratio", default = 0.2, type=float, help="Proportion of training data set aside as validation")
 parser.add_argument("--mode", help="can be train, test, or vis")
 parser.add_argument("--save_every", default = 10, type=int, help="save model at this this many epochs")
+parser.add_argument("--model_file", help="mandatory argument, specify which file to load model from")
 args = parser.parse_args()
 
 #Setup
