@@ -3,6 +3,7 @@ from torch import nn
 from torch.nn import functional as F
 from torchvision.models import densenet
 from torchvision.models.densenet import _DenseBlock, _Transition
+import torchsummary
 
 #import code
 from copy import deepcopy
@@ -96,6 +97,15 @@ def freeze_parameters(module):
         param.requires_grad = False
 
 
+
+def summary(model, input_size=(1, 1024, 1024)):
+    """ Do a Keras-like summary of the pytorch model.
+        param |model|: nn.Module subclass or -.Sequential model
+    """
+    # Assume method will be used on MammogramDenseNet by default
+    torchsummary.summary(input_size)
+
+
 def get_pretrained_layers(model_name='densenet201'):
 
     # Use Densenet-201 by default
@@ -146,19 +156,6 @@ def get_pretrained_layers(model_name='densenet201'):
     return layers
 
 
-"""
-num_features = num_init_features
-for i, num_layers in enumerate(block_config):
-    block = _DenseBlock(num_layers=num_layers, num_input_features=num_features,
-                        bn_size=bn_size, growth_rate=growth_rate, drop_rate=drop_rate)
-    self.features.add_module('denseblock%d' % (i + 1), block)
-    num_features = num_features + num_layers * growth_rate
-    if i != len(block_config) - 1:
-        trans = _Transition(num_input_features=num_features, num_output_features=num_features // 2)
-        self.features.add_module('transition%d' % (i + 1), trans)
-        num_features = num_features // 2
-"""
-
 class MammogramDenseNet(nn.Module):
     """ Description
     """
@@ -176,6 +173,21 @@ class MammogramDenseNet(nn.Module):
 
         # Add the rest of the architecture (Dense blocks, transition layers)
         # self.features.add_module(...)
+
+
+        """
+        num_features = num_init_features
+        for i, num_layers in enumerate(block_config):
+            block = _DenseBlock(num_layers=num_layers, num_input_features=num_features,
+                                bn_size=bn_size, growth_rate=growth_rate, drop_rate=drop_rate)
+            self.features.add_module('denseblock%d' % (i + 1), block)
+            num_features = num_features + num_layers * growth_rate
+            if i != len(block_config) - 1:
+                trans = _Transition(num_input_features=num_features, num_output_features=num_features // 2)
+                self.features.add_module('transition%d' % (i + 1), trans)
+                num_features = num_features // 2
+        """
+
 
         # Put the classifier here separately (will apply it manually in forward(x))
         self.classifier = None # nn.Linear(...)
