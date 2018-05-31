@@ -19,3 +19,5 @@ datasets = ["test", "train"]
 
 for i in datasets:
     write_data_list(i)
+    
+# Note:  ran /usr/local/bin/gshuf -o test.txt < test.txt and similar for train as well
