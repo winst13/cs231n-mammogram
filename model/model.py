@@ -103,7 +103,7 @@ def summary(model, input_size=(1, 1024, 1024)):
         param |model|: nn.Module subclass or -.Sequential model
     """
     # Assume method will be used on MammogramDenseNet by default
-    torchsummary.summary(input_size)
+    torchsummary.summary(model, input_size)
 
 
 def get_pretrained_layers(model_name='densenet201'):
@@ -161,19 +161,35 @@ class MammogramDenseNet(nn.Module):
     """
 
     def __init__(self, growth_rate=32, block_config=(12,6),
-                 bn_size=4, drop_rate=0, pretrained_encoder=True):
+                 bn_size=4, drop_rate=0, pretrained_encoder=True, debug=False):
 
         super(MammogramDenseNet, self).__init__()
         
-        self.num_classes = 2
+        self.num_classes = 2  # Benign (0) or Malignant (1)
 
         if pretrained_encoder:
             pretrained_layers = get_pretrained_layers() # Densenet-201 default
             self.features = nn.Sequential(pretrained_layers)
 
-        # Add the rest of the architecture (Dense blocks, transition layers)
-        # self.features.add_module(...)
+            # Display shapes for debugging
+            if debug:
+                print("Displaying the output shape of the encoder (batch, channels, H, W):")
+                # summary() printout takes a lot of time, but more comprehensive info
+                #summary(self.features)
 
+                test_input = torch.rand(2,1,1024,1024)
+                test_output = self.features(test_input)
+                print(test_output.size())
+                # test_output: (-1, 256, 256, 256)
+        else:
+            self.features = nn.Sequential() # Empty model if no pretrained encoder
+
+        # A counter to track what input shape our final nn.Linear layer should expect
+        #  Just num_channels is fine, because global avg pool at end
+        num_total_features = 256 if pretrained_encoder else 1
+
+        # Add the rest of the architecture (Dense blocks, transition layers)
+        # self.features.add_module(...) 
 
         """
         num_features = num_init_features
@@ -193,7 +209,8 @@ class MammogramDenseNet(nn.Module):
         self.classifier = None # nn.Linear(...)
 
 
-        # The official init loop from the PyTorch repo for densenet.
+        # The official init loop idiom from the PyTorch repo for densenet.
+        #  Initialize only the layers that have .requres_grad=True.
         """
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
@@ -210,11 +227,11 @@ class MammogramDenseNet(nn.Module):
         features = self.features(x)
         out = F.relu(features, inplace=True) # Last Relu, bc most recent was a conv
 
-        # Note: The .view() below is probably why the classifier isn't included as a module
-        # out = F.avg_pool2d(out, kernel_size=7, stride=1)
-        # out = out.view(features.size(0), -1)
+        # Note: The .view() below is probably why the classifier is separate
+        #   Idiomatic in Pytorch to reshape in forward function. No reshape() module.
+        # out = F.avg_pool2d(out, kernel_size=7, stride=1).view(features.size(0), -1)
 
-        # Classifier in __init__ requires knowing # of neurons at this flattened stage
+        # Classifier created in __init__
         out = self.classifier(out)
 
 
