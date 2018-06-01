@@ -11,6 +11,7 @@ from torch.nn import functional as F
 import numpy as np
 import argparse
 
+from util.util import print
 from util.dataset_class import MammogramDataset
 from util.checkpoint import save_model, load_model
 from model.baseline_model import BaselineModel
@@ -85,12 +86,21 @@ else:
     device = torch.device('cpu')
 print('using device:', device)
 
+
+def evaluate_metrics(preds, labels):
+    truepos  = ((preds == 1) * (labels == 1)).sum()
+    falsepos = ((preds == 1) * (labels == 0)).sum()
+    trueneg  = ((preds == 0) * (labels == 0)).sum()
+    falseneg = ((preds == 0) * (labels == 1)).sum()
+    return truepos, falsepos, trueneg, falseneg
+
+
 '''
 Take a loader, model, and optimizer.  Use the optimizer to update the model
 based on the training data, which is from the loader.  Does not terminate,
 saves best checkpoint and latest checkpoint
 '''
-def train(loader_train, loader_val, model, optimizer, epoch):
+def train(loader_train, loader_val, model, optimizer, epoch, loss_list = []):
     model = model.to(device=device)
     while True:
         tot_correct = 0.0
@@ -107,13 +117,17 @@ def train(loader_train, loader_val, model, optimizer, epoch):
             loss = F.cross_entropy(scores, y)
             loss.backward()
             optimizer.step()
+            loss_list.append(loss)
             
-            #training acc
+            #training acc, precision, recall, etc. metrics
+            num_samples = scores.size(0)
             _, preds = scores.max(1)
-            num_correct = (preds == y).sum()
-            num_samples = preds.size(0)
+            truepos, falsepos, trueneg, falseneg = evaluate_metrics(preds, y)
+            assert (truepos + falsepos + trueneg + falseneg) == num_samples
+            num_correct = truepos + trueneg
             tot_correct += num_correct
             tot_samples += num_samples
+            
 
             if t % print_every == 0:
                 batch_acc = float(num_correct)/num_samples
@@ -126,6 +140,7 @@ def train(loader_train, loader_val, model, optimizer, epoch):
                 'epoch': epoch,
                 'state_dict': model.state_dict(),
                 'optimizer' : optimizer.state_dict(),
+                'loss_list' : loss_list,
                 }, val_acc, exp_name)
         print ("EPOCH ", epoch, ", val accuracy = ", val_acc)
         print ("train accuracy = ", train_acc)
@@ -150,13 +165,14 @@ def check_accuracy(loader, model):
             x = x.to(device=device, dtype=dtype)  # move to device, e.g. GPU
             y = y.to(device=device, dtype=torch.long)
             scores = model(x)
+            num_samples = scores.size(0)
             _, preds = scores.max(1)
-            num_correct += (preds == y).sum()
-            num_samples += preds.size(0)
-        acc = float(num_correct) / num_samples
+            truepos, falsepos, trueneg, falseneg = evaluate_metrics(preds, y)
+            assert (truepos + falsepos + trueneg + falseneg) == num_samples
+            acc = (truepos + trueneg)/num_samples
     return acc
 
-learning_rate = 1e-1
+learning_rate = 1e-3
 betas = (0.9, 0.999)
 
 if model_name == "baseline":
@@ -172,14 +188,15 @@ optimizer = optim.SGD(filter(lambda p: p.requires_grad, model.parameters()),
                      lr=learning_rate, momentum=0.9, nesterov=True)
 
 epoch = 0
+loss_list = []
 if load_check:
-    epoch = load_model(exp_name, model, optimizer, mode = 'checkpoint')
+    epoch, loss_list = load_model(exp_name, model, optimizer, mode = 'checkpoint')
 if load_best:
-    epoch = load_model(exp_name, model, optimizer, mode = 'best')
+    epoch, loss_list = load_model(exp_name, model, optimizer, mode = 'best')
 
 if mode == 'train':
-    train(loader_train, loader_val, model, optimizer, epoch)
+    train(loader_train, loader_val, model, optimizer, epoch, loss_list = loss_list)
 elif mode == 'tiny':
-    train(loader_tiny_train, loader_tiny_val, model, optimizer, epoch)
+    train(loader_tiny_train, loader_tiny_val, model, optimizer, epoch, loss_list = loss_list)
         
 
