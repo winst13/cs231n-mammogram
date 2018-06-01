@@ -139,6 +139,14 @@ def get_pretrained_layers(model_name='densenet201'):
 
     return layers
 
+class Swish(nn.Module):
+    def __init__(self, beta=1.):
+        super(Swish, self).__init__()
+        self.beta = beta
+
+    def forward(self, x):
+        asdf
+
 
 class MammogramDenseNet(nn.Module):
     """ Description
@@ -224,8 +232,8 @@ class MammogramDenseNet(nn.Module):
             _dataset_mean = 0.217989
             _dataset_std  = 0.257150
             
-        """    
-        return (x - 0.217989) / 0.257150
+        """
+        return (x - 0.217989) / 0.257150 * 0.1
 
 
     def forward(self, x):
