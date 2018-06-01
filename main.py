@@ -160,6 +160,7 @@ the data loader's data set
 '''
 def check_accuracy(loader, model):
     tot_correct, tot_samples = 0, 0
+    truepos, falsepos, trueneg, falseneg = 0, 0, 0, 0
     model.eval()  # set model to evaluation mode
     with torch.no_grad():
         for sample in loader:
@@ -171,10 +172,10 @@ def check_accuracy(loader, model):
             num_samples = scores.size(0)
             tot_samples += num_samples
             _, preds = scores.max(1)
-            truepos, falsepos, trueneg, falseneg = evaluate_metrics(preds, y)
-            assert (truepos + falsepos + trueneg + falseneg) == num_samples
-            tot_correct += truepos + trueneg
-            print ("tp = %d, fp = %d, tn = %d, fn = %d"%(truepos, falsepos, trueneg, falseneg))
+            truepos, falsepos, trueneg, falseneg += evaluate_metrics(preds, y)
+    assert (truepos + falsepos + trueneg + falseneg) == tot_samples
+    tot_correct += truepos + trueneg
+    print ("tp = %d, fp = %d, tn = %d, fn = %d"%(truepos, falsepos, trueneg, falseneg))
     acc = float(tot_correct)/tot_samples
     for name, param in model.named_parameters():
         if param.requires_grad:
@@ -186,13 +187,13 @@ betas = (0.9, 0.999)
 if model_name == "baseline":
     model = BaselineModel()
 elif model_name == "tinydense":
-    model = get_tiny_densenet()
+    model = get_tiny_densenet(debug = debug)
 elif model_name == "smalldense":
-    model = get_small_densenet()
+    model = get_small_densenet(debug = debug)
 elif model_name == "mediumdense":
-    model = get_medium_densenet()
+    model = get_medium_densenet(debug = debug)
 elif model_name == "largedense":
-    model = get_large_densenet()
+    model = get_large_densenet(debug = debug)
 else:
     print ("bad --model parameter")
     
