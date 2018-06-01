@@ -140,12 +140,16 @@ def get_pretrained_layers(model_name='densenet201'):
     return layers
 
 class Swish(nn.Module):
-    def __init__(self, beta=1.):
+    """ Swish activation by Google that works better for 40-50+ layer networks.
+    """
+    def __init__(self):
         super(Swish, self).__init__()
-        self.beta = beta
+        self.beta = nn.Parameter(data=torch.ones(1))
+        self.beta.requires_grad = True
 
     def forward(self, x):
-        asdf
+        #beta = self.beta.expand_as(x)
+        return x * F.sigmoid(self.beta * x)
 
 
 class MammogramDenseNet(nn.Module):
@@ -233,7 +237,7 @@ class MammogramDenseNet(nn.Module):
             _dataset_std  = 0.257150
             
         """
-        return (x - 0.217989) / 0.257150 * 0.1
+        return (x - 0.217989) / 0.257150
 
 
     def forward(self, x):
