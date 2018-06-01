@@ -6,6 +6,7 @@ from torch.utils.data import sampler
 
 import torchvision.datasets as dset
 import torchvision.transforms as T
+from torch.nn import functional as F
 
 import numpy as np
 import argparse
@@ -41,6 +42,9 @@ BATCH_SIZE = args.batch_size
 #Make sure parameters are valid
 assert mode == 'test' or mode == 'train' or mode == 'vis'
 if mode == 'vis': assert checkpoint is not None
+    
+# CONSTANTS
+IMAGE_SIZE = 1024*1024
 
 # The torchvision.transforms package provides tools for preprocessing data
 # and for performing data augmentation; here we set up a transform to
@@ -76,31 +80,34 @@ Take a loader, model, and optimizer.  Use the optimizer to update the model
 based on the training data, which is from the loader.  Does not terminate,
 saves best checkpoint and latest checkpoint
 '''
-def train(loader, model, optimizer):
+def train(loader_train, loader_val, model, optimizer):
     epoch = 1
     model = model.to(device=device)
     while True:
         for t, sample in enumerate(loader_train):
-            x = sample['image']
+            x = sample['image'].unsqueeze(1)
             y = sample['label']
             # Move the data to the proper device (GPU or CPU)
             x = x.to(device=device, dtype=dtype)
             y = y.to(device=device, dtype=torch.long)
 
             scores = model(x)
-            loss = F.cross_entropy(scores, y)
             optimizer.zero_grad()
+            loss = F.cross_entropy(scores, y)
             loss.backward()
             optimizer.step()
 
             if t % print_every == 0:
-                print('Iteration %d' % (t))
-                print('y = ', y.shape)
-                print('x shape = ', x.shape)
-                print()
-        acc = check_accuracy(loader_val, model_fn, params)
+                acc = check_accuracy(loader_train, model)
+                print('Iteration ', t, ": train accuracy = ", acc)
+                
+        acc = check_accuracy(loader_val, model)
         if epoch % save_every == 0:
             save_model() #NEEDS WORK
+        print ("EPOCH ", epoch, ", val accuracy = ", acc)
+        for name, param in model.named_parameters():
+            if param.requires_grad:
+                print (name, param.data)
         epoch += 1
         
 '''
@@ -112,15 +119,43 @@ def check_accuracy(loader, model):
     model.eval()  # set model to evaluation mode
     with torch.no_grad():
         for sample in loader:
-            x = sample['image']
+            x = sample['image'].unsqueeze(1)
             y = sample['label']
             x = x.to(device=device, dtype=dtype)  # move to device, e.g. GPU
             y = y.to(device=device, dtype=torch.long)
             scores = model(x)
             _, preds = scores.max(1)
+            #print (scores, y)
             num_correct += (preds == y).sum()
             num_samples += preds.size(0)
         acc = float(num_correct) / num_samples
     return acc
+
+class Flatten(nn.Module):
+    def forward(self, x):
+        N = x.shape[0] # read in N, C, H, W
+        return x.view(N, -1)  # "flatten" the C * H * W values into a single vector per image
+
+learning_rate = 1e-1
+betas = (0.9, 0.999)
+
+model = nn.Sequential(
+    nn.MaxPool2d(2),
+    Flatten(),
+    nn.Linear(512*512, 2)
+)
+
+def init_weights(model):
+    if type(model) == nn.Linear:
+        torch.nn.init.xavier_normal_(model.weight)
+        model.bias.data.fill_(0)
+    if type(model) == nn.Conv2d:
+        torch.nn.init.kaiming_normal_(model.weight)
+        model.bias.data.fill_(0)
+
+model.apply(init_weights)
+
+optimizer = optim.Adam(model.parameters(), lr=learning_rate, betas = betas, weight_decay=1e-3)
+train(loader_train, loader_val, model, optimizer)
         
 

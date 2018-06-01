@@ -111,7 +111,6 @@ def clean_data(datasplit_prefix, dirpath, outpath, outpath_for_images, collect_s
         # Store each sample Numpy!
         imgarray_for_npy = preprocess(imgarray)
         savepath_npy = join(outpath, name + ".npy")
-        np.save(savepath_npy, imgarray_for_npy)
 
         #print("flag 3")
         # Store each sample jpg (for details later)! One every 10 should be fine

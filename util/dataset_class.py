@@ -6,6 +6,8 @@ import torchvision.transforms as T
 import numpy as np
 import os
 
+NUM_CLASSES = 2
+
 class MammogramDataset(Dataset):
     def __init__(self, root_dir, dataset, transform = None):
         self.root_dir = root_dir
@@ -22,8 +24,7 @@ class MammogramDataset(Dataset):
     def __getitem__(self, idx):
         label, image_name = self.datapoints[idx]
         image_path = os.path.join(self.root_dir, self.dataset, label, image_name)
-        with open(image_path, 'r') as image_file:
-            image = np.load(image_file)
+        image = np.load(image_path, encoding = "bytes")
         sample = {'image': image, 'label': int(label)}
         
         if self.transform:
