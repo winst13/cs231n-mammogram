@@ -176,11 +176,9 @@ def check_accuracy(loader, model):
             tot_correct += truepos + trueneg
             print ("tp = %d, fp = %d, tn = %d, fn = %d"%(truepos, falsepos, trueneg, falseneg))
     acc = float(tot_correct)/tot_samples
-    '''
     for name, param in model.named_parameters():
         if param.requires_grad:
             print (name, param.data)
-    '''
     return acc
 
 betas = (0.9, 0.999)
