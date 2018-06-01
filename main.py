@@ -32,6 +32,7 @@ parser.add_argument("--save_every", default = 10, type=int, help="save model at 
 parser.add_argument("--model_file", help="mandatory argument, specify which file to load model from")
 parser.add_argument("--exp_name", help="mandatory argument, specify the name of the experiment")
 parser.add_argument("--model", help="mandatory argument, specify the model being used")
+parser.add_argument("--lr", default=5e-3, type=float, help="learning rate")
 args = parser.parse_args()
 
 #Setup
@@ -45,6 +46,7 @@ mode = args.mode
 save_every = args.save_every
 exp_name = args.exp_name
 model_name = args.model
+learning_rate = args.lr
 
 #Hyperparameters
 BATCH_SIZE = args.batch_size
@@ -173,7 +175,7 @@ def check_accuracy(loader, model):
             assert (truepos + falsepos + trueneg + falseneg) == num_samples
             tot_correct += truepos + falsepos
             print ("tp = %d, fp = %d, tn = %d, fn = %d"%(truepos, falsepos, trueneg, falseneg))
-    acc = (truepos + trueneg)/num_samples
+    acc = float(tot_correct)/tot_samples
     '''
     for name, param in model.named_parameters():
         if param.requires_grad:
@@ -181,7 +183,6 @@ def check_accuracy(loader, model):
     '''
     return acc
 
-learning_rate = 1e-2
 betas = (0.9, 0.999)
 
 if model_name == "baseline":
