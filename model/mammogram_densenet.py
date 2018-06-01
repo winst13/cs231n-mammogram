@@ -52,19 +52,6 @@ Final linear layer:
 """
 
 
-def preprocess(x):
-    """ Sample preprocessing code and statistics examples are at:
-        https://github.com/titu1994/DenseNet/blob/master/densenet.py#L37
-        
-        Our data from the .npy mammogram image tensors are already normed to [0,1].
-        _dataset_mean = 0.217989
-        _dataset_std  = 0.257150
-        
-    """    
-    return (x - 0.217989) / 0.257150
-
-
-
 def transform_filters_to_grayscale(m):
     """ Turn the filter tensors for Conv2d expecting RGB to grayscale.
             Use average method; no need to scale with 0.3R + 0.59G + 0.11B
@@ -234,10 +221,23 @@ class MammogramDenseNet(nn.Module):
                 # m.weight is already initialized
                 nn.init.constant_(m.bias, 0)
 
+    def preprocess(self, x):
+        """ Sample preprocessing code and statistics examples are at:
+            https://github.com/titu1994/DenseNet/blob/master/densenet.py#L37
+            
+            Our data from the .npy mammogram image tensors are already normed to [0,1].
+            _dataset_mean = 0.217989
+            _dataset_std  = 0.257150
+            
+        """    
+        return (x - 0.217989) / 0.257150
+
 
     def forward(self, x):
         resolution = 256 if self.has_pretrained else 1024
         resolution /= 2 ** (self.nb_dense_blocks - 1)
+        
+        x = self.preprocess(x)
 
         features = self.features(x)
         if self.debug: print("After all convolutions:", features.size())
