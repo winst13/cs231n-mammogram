@@ -13,6 +13,7 @@ import argparse
 
 from util.dataset_class import MammogramDataset
 from util.checkpoint import save_model, load_model
+from model.baseline_model import BaselineModel
 
 # ARGS
 parser = argparse.ArgumentParser()
@@ -25,6 +26,7 @@ parser.add_argument("--val_ratio", default = 0.2, type=float, help="Proportion o
 parser.add_argument("--mode", help="can be train, test, or vis")
 parser.add_argument("--save_every", default = 10, type=int, help="save model at this this many epochs")
 parser.add_argument("--model_file", help="mandatory argument, specify which file to load model from")
+parser.add_argument("--exp_name", help="mandatory argument, specify the name of the experiment")
 args = parser.parse_args()
 
 #Setup
@@ -35,12 +37,13 @@ USE_GPU = False if args.use_cpu else True
 VAL_RATIO = args.val_ratio
 mode = args.mode
 save_every = args.save_every
+exp_name = args.exp_name
 
 #Hyperparameters
 BATCH_SIZE = args.batch_size
 
 #Make sure parameters are valid
-assert mode == 'test' or mode == 'train' or mode == 'vis'
+assert mode == 'test' or mode == 'train' or mode == 'vis' or mode == 'tiny'
 if mode == 'vis': assert checkpoint is not None
     
 # CONSTANTS
@@ -56,7 +59,6 @@ transform = T.Compose([
             ])
 
 train_data = MammogramDataset("data", "train")#Can add transform = transform as an argument
-val_data = MammogramDataset("data", "train")
 test_data = MammogramDataset("data", "test")
 
 NUM_VAL = int(len(train_data)*VAL_RATIO)
@@ -64,9 +66,11 @@ NUM_TRAIN = len(train_data) - NUM_VAL
 NUM_TEST = len(test_data)
 
 loader_train = DataLoader(train_data, batch_size=BATCH_SIZE, sampler=sampler.SubsetRandomSampler(range(NUM_TRAIN)))
-loader_val = DataLoader(val_data, batch_size=BATCH_SIZE, sampler=sampler.SubsetRandomSampler(range(NUM_TRAIN, 
+loader_val = DataLoader(train_data, batch_size=BATCH_SIZE, sampler=sampler.SubsetRandomSampler(range(NUM_TRAIN, 
                                                                                               NUM_TRAIN + NUM_VAL)))
 loader_test = DataLoader(test_data, batch_size=BATCH_SIZE)
+loader_tiny_train = DataLoader(train_data, batch_size=BATCH_SIZE, sampler=sampler.SubsetRandomSampler(range(100)))
+loader_tiny_val = DataLoader(train_data, batch_size=BATCH_SIZE, sampler=sampler.SubsetRandomSampler(range(100, 200)))
 
 dtype = torch.float32 # we will be using float throughout this tutorial
 if USE_GPU and torch.cuda.is_available(): #Determine whether or not to use GPU
@@ -83,6 +87,8 @@ saves best checkpoint and latest checkpoint
 def train(loader_train, loader_val, model, optimizer):
     epoch = 1
     model = model.to(device=device)
+    tot_correct = 0.0
+    tot_samples = 0.0
     while True:
         for t, sample in enumerate(loader_train):
             x = sample['image'].unsqueeze(1)
@@ -96,15 +102,28 @@ def train(loader_train, loader_val, model, optimizer):
             loss = F.cross_entropy(scores, y)
             loss.backward()
             optimizer.step()
+            
+            #training acc
+            _, preds = scores.max(1)
+            num_correct = (preds == y).sum()
+            num_samples = preds.size(0)
+            tot_correct += num_correct
+            tot_samples += num_samples
 
             if t % print_every == 0:
-                acc = check_accuracy(loader_train, model)
-                print('Iteration ', t, ": train accuracy = ", acc)
+                batch_acc = float(num_correct)/num_samples
+                print('Iteration ', t, ": batch train accuracy = ", batch_acc)
                 
-        acc = check_accuracy(loader_val, model)
+        val_acc = check_accuracy(loader_val, model)
+        train_acc = float(tot_correct)/tot_samples
         if epoch % save_every == 0:
-            save_model() #NEEDS WORK
-        print ("EPOCH ", epoch, ", val accuracy = ", acc)
+            save_model(exp_name, {
+                'epoch': epoch + 1,
+                'state_dict': model.state_dict(),
+                'optimizer' : optimizer.state_dict(),
+                }, val_acc)
+        print ("EPOCH ", epoch, ", val accuracy = ", val_acc)
+        print ("train accuracy = ", train_acc)
         for name, param in model.named_parameters():
             if param.requires_grad:
                 print (name, param.data)
@@ -125,37 +144,19 @@ def check_accuracy(loader, model):
             y = y.to(device=device, dtype=torch.long)
             scores = model(x)
             _, preds = scores.max(1)
-            #print (scores, y)
             num_correct += (preds == y).sum()
             num_samples += preds.size(0)
         acc = float(num_correct) / num_samples
     return acc
 
-class Flatten(nn.Module):
-    def forward(self, x):
-        N = x.shape[0] # read in N, C, H, W
-        return x.view(N, -1)  # "flatten" the C * H * W values into a single vector per image
-
 learning_rate = 1e-1
 betas = (0.9, 0.999)
 
-model = nn.Sequential(
-    nn.MaxPool2d(2),
-    Flatten(),
-    nn.Linear(512*512, 2)
-)
-
-def init_weights(model):
-    if type(model) == nn.Linear:
-        torch.nn.init.xavier_normal_(model.weight)
-        model.bias.data.fill_(0)
-    if type(model) == nn.Conv2d:
-        torch.nn.init.kaiming_normal_(model.weight)
-        model.bias.data.fill_(0)
-
-model.apply(init_weights)
-
+model = BaselineModel()
 optimizer = optim.Adam(model.parameters(), lr=learning_rate, betas = betas, weight_decay=1e-3)
-train(loader_train, loader_val, model, optimizer)
+if mode == 'train':
+    train(loader_train, loader_val, model, optimizer)
+elif mode == 'tiny':
+    train(loader_tiny_train, loader_tiny_val, model, optimizer)
         
 
