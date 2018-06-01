@@ -14,11 +14,13 @@ import argparse
 from util.dataset_class import MammogramDataset
 from util.checkpoint import save_model, load_model
 from model.baseline_model import BaselineModel
+from model.mammogram_densenet import MammogramDenseNet
 
 # ARGS
 parser = argparse.ArgumentParser()
 parser.add_argument("--debug", action='store_true', help="Debug mode: ???")
-parser.add_argument("--checkpoint", help="optional path argument, if we want to load an existing model")
+parser.add_argument("--load_check", action='store_true', help="optional argument, if we want to load an existing model")
+parser.add_argument("--load_best", action='store_true', help="optional argument, if we want to load an existing model")
 parser.add_argument("--print_every", default = 100, type=int, help="print loss every this many iterations")
 parser.add_argument("--use_cpu", action='store_true', help="Use GPU if possible, set to false to use CPU")
 parser.add_argument("--batch_size", default = 10, type=int, help="Batch size")
@@ -27,24 +29,28 @@ parser.add_argument("--mode", help="can be train, test, or vis")
 parser.add_argument("--save_every", default = 10, type=int, help="save model at this this many epochs")
 parser.add_argument("--model_file", help="mandatory argument, specify which file to load model from")
 parser.add_argument("--exp_name", help="mandatory argument, specify the name of the experiment")
+parser.add_argument("--model", help="mandatory argument, specify the model being used")
 args = parser.parse_args()
 
 #Setup
 debug = args.debug
-checkpoint = args.checkpoint
+load_check = args.load_check
+load_best = args.load_best
 print_every = args.print_every
 USE_GPU = False if args.use_cpu else True
 VAL_RATIO = args.val_ratio
 mode = args.mode
 save_every = args.save_every
 exp_name = args.exp_name
+model_name = args.model
 
 #Hyperparameters
 BATCH_SIZE = args.batch_size
 
 #Make sure parameters are valid
 assert mode == 'test' or mode == 'train' or mode == 'vis' or mode == 'tiny'
-if mode == 'vis': assert checkpoint is not None
+assert load_check == False or load_best == False
+if mode == 'vis':  assert load_check == True or load_best == True
     
 # CONSTANTS
 IMAGE_SIZE = 1024*1024
@@ -84,12 +90,11 @@ Take a loader, model, and optimizer.  Use the optimizer to update the model
 based on the training data, which is from the loader.  Does not terminate,
 saves best checkpoint and latest checkpoint
 '''
-def train(loader_train, loader_val, model, optimizer):
-    epoch = 1
+def train(loader_train, loader_val, model, optimizer, epoch):
     model = model.to(device=device)
-    tot_correct = 0.0
-    tot_samples = 0.0
     while True:
+        tot_correct = 0.0
+        tot_samples = 0.0
         for t, sample in enumerate(loader_train):
             x = sample['image'].unsqueeze(1)
             y = sample['label']
@@ -117,16 +122,18 @@ def train(loader_train, loader_val, model, optimizer):
         val_acc = check_accuracy(loader_val, model)
         train_acc = float(tot_correct)/tot_samples
         if epoch % save_every == 0:
-            save_model(exp_name, {
-                'epoch': epoch + 1,
+            save_model({
+                'epoch': epoch,
                 'state_dict': model.state_dict(),
                 'optimizer' : optimizer.state_dict(),
-                }, val_acc)
+                }, val_acc, exp_name)
         print ("EPOCH ", epoch, ", val accuracy = ", val_acc)
         print ("train accuracy = ", train_acc)
+        '''
         for name, param in model.named_parameters():
             if param.requires_grad:
                 print (name, param.data)
+        '''
         epoch += 1
         
 '''
@@ -152,11 +159,25 @@ def check_accuracy(loader, model):
 learning_rate = 1e-1
 betas = (0.9, 0.999)
 
-model = BaselineModel()
-optimizer = optim.Adam(model.parameters(), lr=learning_rate, betas = betas, weight_decay=1e-3)
+if model_name == "baseline":
+    model = BaselineModel()
+elif model_name == "densenet":
+    model = MammogramDenseNet()
+else:
+    print ("bad --model parameter")
+    
+optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), 
+                       lr=learning_rate, betas = betas, weight_decay=1e-3)
+
+epoch = 0
+if load_check:
+    epoch = load_model(exp_name, model, optimizer, mode = 'checkpoint')
+if load_best:
+    epoch = load_model(exp_name, model, optimizer, mode = 'best')
+
 if mode == 'train':
-    train(loader_train, loader_val, model, optimizer)
+    train(loader_train, loader_val, model, optimizer, epoch)
 elif mode == 'tiny':
-    train(loader_tiny_train, loader_tiny_val, model, optimizer)
+    train(loader_tiny_train, loader_tiny_val, model, optimizer, epoch)
         
 
