@@ -180,11 +180,9 @@ class MammogramDenseNet(nn.Module):
 
         # A counter to track what input shape our final nn.Linear layer should expect
         #  Just num_channels is fine, because global avg pool at end
-        
-
-        # Add the rest of the architecture (Dense blocks, transition layers)
         num_features = 256 if pretrained_encoder else 1
 
+        # Add the rest of the architecture (Dense blocks, transition layers)
         for i, num_layers in enumerate(block_config):
             block = _DenseBlock(num_layers=num_layers, num_input_features=num_features,
                                 bn_size=bn_size, growth_rate=growth_rate, drop_rate=drop_rate)
@@ -237,25 +235,25 @@ class MammogramDenseNet(nn.Module):
         x = self.preprocess(x)
 
         features = self.features(x)
-        if self.debug: print("After all convolutions:", features.size())
+        if self.debug: print("After all convolutions:", features)
 
         out = F.relu(features, inplace=True) # Last Relu, bc most recent was a conv
 
         out = F.max_pool2d(out, kernel_size=(2,2), stride=2)
         resolution /= 2
-        if self.debug: print("After max pool:", out.size())
+        if self.debug: print("After max pool:", out)
 
         # Note: The .view() below is probably why the classifier is separate
         #   Idiomatic in Pytorch to reshape in forward function. No reshape() module.
         out = F.avg_pool2d(out, kernel_size=(resolution, resolution), stride=1) # global avg pool
-        if self.debug: print("After avg pool:", out.size())
+        if self.debug: print("After avg pool:", out)
 
         out = out.view(features.size(0), -1)
-        if self.debug: print("After flatten:", out.size())
+        if self.debug: print("After flatten:", out)
         
         # Classifier created in __init__
         out = self.classifier(out)
-        out = nn.
+        if self.debug: print(out)
         return out
 
 
