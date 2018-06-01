@@ -255,7 +255,6 @@ class MammogramDenseNet(nn.Module):
         
         # Classifier created in __init__
         out = self.classifier(out)
-        out = nn.
         return out
 
 
