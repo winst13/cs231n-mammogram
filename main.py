@@ -117,7 +117,7 @@ def train(loader_train, loader_val, model, optimizer, epoch):
 
             if t % print_every == 0:
                 batch_acc = float(num_correct)/num_samples
-                print('Iteration ', t, ": batch train accuracy = ", batch_acc)
+                print('Iteration ', t, ": batch train accuracy = ", batch_acc, ", loss = ", float(loss))
                 
         val_acc = check_accuracy(loader_val, model)
         train_acc = float(tot_correct)/tot_samples
