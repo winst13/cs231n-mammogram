@@ -110,14 +110,12 @@ def get_pretrained_layers(model_name='densenet201'):
     print("Copying features[0]: %s..." % old_model.features[0])
     first_conv = transform_filters_to_grayscale(old_model.features[0])
     layers.append(('conv0', first_conv))
-    # Don't freeze this first layer: We will keep training it, because the colors
-    #  are not perfect for grayscale images, and our preprocessing norm statistics
-    #  are different from original DenseNet trained on ImageNet
-
+    # Don't freeze layers: We will keep training it, because the domain isn't the same as ImageNet
+    
     # The initial BatchNorm
     print("Copying features[1]: %s..." % old_model.features[1])
     first_bn = deepcopy(old_model.features[1])
-    freeze_parameters(first_bn)
+    #freeze_parameters(first_bn)
     layers.append(('batchnorm0', first_bn))
 
     # the classic ReLU
@@ -125,7 +123,7 @@ def get_pretrained_layers(model_name='densenet201'):
     first_relu = nn.ReLU(inplace=True)
     layers.append(('relu0', first_relu))
 
-    # The initial BatchNorm
+    # The initial MaxPool
     print("Copying features[3]: %s..." % old_model.features[3])
     first_maxpool = deepcopy(old_model.features[3])
     layers.append(('maxpool0', first_maxpool))
@@ -134,7 +132,7 @@ def get_pretrained_layers(model_name='densenet201'):
     #   (each is 1x1 conv -> 3x3 conv, w/ appropriate relu and batchnorm)
     print("Copying features[4]: %s..." % type(old_model.features[4])) # print only type: DB has too much text
     denseblock = deepcopy(old_model.features[4])
-    freeze_parameters(denseblock)
+    #freeze_parameters(denseblock)
     layers.append(('denseblock0', denseblock))
 
     layers = OrderedDict(layers)
@@ -190,10 +188,22 @@ class MammogramDenseNet(nn.Module):
         for i, num_layers in enumerate(block_config):
             block = _DenseBlock(num_layers=num_layers, num_input_features=num_features,
                                 bn_size=bn_size, growth_rate=growth_rate, drop_rate=drop_rate)
+
+            # Initialize the weights of block
+            for m in self.modules():
+                if isinstance(m, nn.Conv2d):
+                    nn.init.kaiming_normal_(m.weight)
+                    # Conv layers have no bias when in conjunction with Batchnorm
+                elif isinstance(m, nn.BatchNorm2d):
+                    nn.init.constant_(m.weight, 1)
+                    nn.init.constant_(m.bias, 0)
+
             self.features.add_module('denseblock%d' % (i + 1), block)
+            
             num_features = num_features + num_layers * growth_rate
             if debug: print("num features after denseblock %d:" % (i + 1), num_features)
 
+            # Add a transition layer if not the last dense block
             if i != self.nb_dense_blocks - 1:
                 trans = _Transition(num_input_features=num_features, num_output_features=num_features // 2)
                 self.features.add_module('transition%d' % (i + 1), trans)
@@ -205,20 +215,8 @@ class MammogramDenseNet(nn.Module):
         # Put the classifier here separately 
         #  will apply it manually in forward(x), after global avg pool and reshape
         self.classifier = nn.Linear(num_features, num_classes)
+        nn.init.constant_(self.classifier.bias, 0)
 
-
-        # The official init loop idiom from the PyTorch repo for densenet.
-        #  Initialize only the layers that have .requres_grad=True.
-        for m in self.modules():
-            if isinstance(m, nn.Conv2d) and m.weight.requires_grad:
-                nn.init.kaiming_normal_(m.weight)
-                # Conv layers have no bias when in conjunction with Batchnorm
-            elif isinstance(m, nn.BatchNorm2d) and m.weight.requires_grad:
-                nn.init.constant_(m.weight, 1)
-                nn.init.constant_(m.bias, 0)
-            elif isinstance(m, nn.Linear) and m.weight.requires_grad:
-                # m.weight is already initialized
-                nn.init.constant_(m.bias, 0)
 
     def preprocess(self, x):
         """ Sample preprocessing code and statistics examples are at:
@@ -243,8 +241,8 @@ class MammogramDenseNet(nn.Module):
 
         out = F.relu(features, inplace=True) # Last Relu, bc most recent was a conv
 
-        out = F.max_pool2d(out, kernel_size=(4,4), stride=4)
-        resolution /= 4
+        out = F.max_pool2d(out, kernel_size=(2,2), stride=2)
+        resolution /= 2
         if self.debug: print("After max pool:", out.size())
 
         # Note: The .view() below is probably why the classifier is separate
@@ -257,6 +255,7 @@ class MammogramDenseNet(nn.Module):
         
         # Classifier created in __init__
         out = self.classifier(out)
+        out = nn.
         return out
 
 
