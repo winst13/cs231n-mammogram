@@ -32,6 +32,7 @@ parser.add_argument("--save_every", default = 10, type=int, help="save model at 
 parser.add_argument("--model_file", help="mandatory argument, specify which file to load model from")
 parser.add_argument("--exp_name", help="mandatory argument, specify the name of the experiment")
 parser.add_argument("--model", help="mandatory argument, specify the model being used")
+parser.add_argument("--lr", default=5e-3, type=float, help="learning rate")
 args = parser.parse_args()
 
 #Setup
@@ -45,6 +46,7 @@ mode = args.mode
 save_every = args.save_every
 exp_name = args.exp_name
 model_name = args.model
+learning_rate = args.lr
 
 #Hyperparameters
 BATCH_SIZE = args.batch_size
@@ -157,7 +159,7 @@ Takes a data loader and a model, then returns the model's accuracy on
 the data loader's data set
 '''
 def check_accuracy(loader, model):
-    num_correct, num_samples = 0, 0
+    tot_correct, tot_samples = 0, 0
     model.eval()  # set model to evaluation mode
     with torch.no_grad():
         for sample in loader:
@@ -166,21 +168,19 @@ def check_accuracy(loader, model):
             x = x.to(device=device, dtype=dtype)  # move to device, e.g. GPU
             y = y.to(device=device, dtype=torch.long)
             scores = model(x)
-            num_samples += scores.size(0)
+            num_samples = scores.size(0)
+            tot_samples += num_samples
             _, preds = scores.max(1)
             truepos, falsepos, trueneg, falseneg = evaluate_metrics(preds, y)
             assert (truepos + falsepos + trueneg + falseneg) == num_samples
-            num_correct += truepos + falsepos
+            tot_correct += truepos + trueneg
             print ("tp = %d, fp = %d, tn = %d, fn = %d"%(truepos, falsepos, trueneg, falseneg))
-    acc = (truepos + trueneg)/num_samples
-    '''
+    acc = float(tot_correct)/tot_samples
     for name, param in model.named_parameters():
         if param.requires_grad:
             print (name, param.data)
-    '''
     return acc
 
-learning_rate = 1e-2
 betas = (0.9, 0.999)
 
 if model_name == "baseline":
