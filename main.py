@@ -157,7 +157,7 @@ Takes a data loader and a model, then returns the model's accuracy on
 the data loader's data set
 '''
 def check_accuracy(loader, model):
-    num_correct, num_samples = 0, 0
+    tot_correct, tot_samples = 0, 0
     model.eval()  # set model to evaluation mode
     with torch.no_grad():
         for sample in loader:
@@ -166,11 +166,12 @@ def check_accuracy(loader, model):
             x = x.to(device=device, dtype=dtype)  # move to device, e.g. GPU
             y = y.to(device=device, dtype=torch.long)
             scores = model(x)
-            num_samples += scores.size(0)
+            num_samples = scores.size(0)
+            tot_samples += num_samples
             _, preds = scores.max(1)
             truepos, falsepos, trueneg, falseneg = evaluate_metrics(preds, y)
             assert (truepos + falsepos + trueneg + falseneg) == num_samples
-            num_correct += truepos + falsepos
+            tot_correct += truepos + falsepos
             print ("tp = %d, fp = %d, tn = %d, fn = %d"%(truepos, falsepos, trueneg, falseneg))
     acc = (truepos + trueneg)/num_samples
     '''
