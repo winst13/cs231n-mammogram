@@ -173,7 +173,7 @@ def check_accuracy(loader, model):
             _, preds = scores.max(1)
             truepos, falsepos, trueneg, falseneg = evaluate_metrics(preds, y)
             assert (truepos + falsepos + trueneg + falseneg) == num_samples
-            tot_correct += truepos + falsepos
+            tot_correct += truepos + trueneg
             print ("tp = %d, fp = %d, tn = %d, fn = %d"%(truepos, falsepos, trueneg, falseneg))
     acc = float(tot_correct)/tot_samples
     '''
