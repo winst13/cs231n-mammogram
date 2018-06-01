@@ -190,7 +190,7 @@ class MammogramDenseNet(nn.Module):
                                 bn_size=bn_size, growth_rate=growth_rate, drop_rate=drop_rate)
 
             # Initialize the weights of block
-            for m in self.modules():
+            for m in block.modules():
                 if isinstance(m, nn.Conv2d):
                     nn.init.kaiming_normal_(m.weight)
                     # Conv layers have no bias when in conjunction with Batchnorm
