@@ -16,6 +16,7 @@ from util.dataset_class import MammogramDataset
 from util.checkpoint import save_model, load_model
 from model.baseline_model import BaselineModel
 from model.mammogram_densenet import MammogramDenseNet
+from model.helper import *
 
 # ARGS
 parser = argparse.ArgumentParser()
@@ -142,7 +143,7 @@ def train(loader_train, loader_val, model, optimizer, epoch, loss_list = []):
                 'optimizer' : optimizer.state_dict(),
                 'loss_list' : loss_list,
                 }, val_acc, exp_name)
-        print ("EPOCH ", epoch, ", val accuracy = ", val_acc)
+        print ("EPOCH ", epoch, ", val accuracy = ", float(val_acc))
         print ("train accuracy = ", train_acc)
         '''
         for name, param in model.named_parameters():
@@ -177,8 +178,14 @@ betas = (0.9, 0.999)
 
 if model_name == "baseline":
     model = BaselineModel()
-elif model_name == "densenet":
-    model = MammogramDenseNet()
+elif model_name == "tinydense":
+    model = get_tiny_densenet()
+elif model_name == "smalldense":
+    model = get_small_densenet()
+elif model_name == "mediumdense":
+    model = get_medium_densenet()
+elif model_name == "largedense":
+    model = get_large_densenet()
 else:
     print ("bad --model parameter")
     
