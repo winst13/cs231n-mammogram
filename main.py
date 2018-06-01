@@ -132,7 +132,7 @@ def train(loader_train, loader_val, model, optimizer, epoch, loss_list = []):
 
             if t % print_every == 0:
                 batch_acc = float(num_correct)/num_samples
-                print('Iteration ', t, ": batch train accuracy = ", batch_acc, ", loss = ", float(loss))
+                print('Iteration %d: batch train accuracy = %06f, loss = %06f'%(t, batch_acc, float(loss)))
                 
         val_acc = check_accuracy(loader_val, model)
         train_acc = float(tot_correct)/tot_samples
@@ -143,8 +143,8 @@ def train(loader_train, loader_val, model, optimizer, epoch, loss_list = []):
                 'optimizer' : optimizer.state_dict(),
                 'loss_list' : loss_list,
                 }, val_acc, exp_name)
-        print ("EPOCH ", epoch, ", val accuracy = ", float(val_acc))
-        print ("train accuracy = ", train_acc)
+        print ("EPOCH %d, val accuracy = %06f"%(epoch, float(val_acc)))
+        print ("train accuracy = %06f"%(train_acc))
         '''
         for name, param in model.named_parameters():
             if param.requires_grad:
@@ -166,14 +166,21 @@ def check_accuracy(loader, model):
             x = x.to(device=device, dtype=dtype)  # move to device, e.g. GPU
             y = y.to(device=device, dtype=torch.long)
             scores = model(x)
-            num_samples = scores.size(0)
+            num_samples += scores.size(0)
             _, preds = scores.max(1)
             truepos, falsepos, trueneg, falseneg = evaluate_metrics(preds, y)
             assert (truepos + falsepos + trueneg + falseneg) == num_samples
-            acc = (truepos + trueneg)/num_samples
+            num_correct += truepos + falsepos
+            print ("tp = %d, fp = %d, tn = %d, fn = %d"%(truepos, falsepos, trueneg, falseneg))
+    acc = (truepos + trueneg)/num_samples
+    '''
+    for name, param in model.named_parameters():
+        if param.requires_grad:
+            print (name, param.data)
+    '''
     return acc
 
-learning_rate = 1e-3
+learning_rate = 1e-2
 betas = (0.9, 0.999)
 
 if model_name == "baseline":
