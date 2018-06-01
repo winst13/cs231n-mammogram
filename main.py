@@ -166,8 +166,10 @@ elif model_name == "densenet":
 else:
     print ("bad --model parameter")
     
-optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), 
-                       lr=learning_rate, betas = betas, weight_decay=1e-3)
+#optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), 
+#                       lr=learning_rate, betas = betas, weight_decay=1e-3)
+optimizer = optim.SGD(filter(lambda p: p.requires_grad, model.parameters()), 
+                     lr=learning_rate, momentum=0.9, nesterov=True)
 
 epoch = 0
 if load_check:
