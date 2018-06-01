@@ -169,17 +169,16 @@ def check_accuracy(loader, model):
             x = x.to(device=device, dtype=dtype)  # move to device, e.g. GPU
             y = y.to(device=device, dtype=torch.long)
             scores = model(x)
-            num_samples = scores.size(0)
-            tot_samples += num_samples
+            tot_samples += scores.size(0)
             _, preds = scores.max(1)
             truepos, falsepos, trueneg, falseneg = evaluate_metrics(preds, y)
             tot_truepos += truepos
             tot_falsepos += falsepos
             tot_trueneg += trueneg
             tot_falseneg += falseneg
-    assert (truepos + falsepos + trueneg + falseneg) == tot_samples
+    print ("tp = %d, fp = %d, tn = %d, fn = %d, tot = %d"%(tot_truepos, tot_falsepos, tot_trueneg, tot_falseneg, tot_samples))
+    assert (tot_truepos + tot_falsepos + tot_trueneg + tot_falseneg) == tot_samples
     tot_correct += truepos + trueneg
-    print ("tp = %d, fp = %d, tn = %d, fn = %d"%(truepos, falsepos, trueneg, falseneg))
     acc = float(tot_correct)/tot_samples
     '''
     for name, param in model.named_parameters():
