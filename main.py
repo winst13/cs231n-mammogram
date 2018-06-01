@@ -160,7 +160,7 @@ the data loader's data set
 '''
 def check_accuracy(loader, model):
     tot_correct, tot_samples = 0, 0
-    truepos, falsepos, trueneg, falseneg = 0, 0, 0, 0
+    tot_truepos, tot_falsepos, tot_trueneg, tot_falseneg = 0, 0, 0, 0
     model.eval()  # set model to evaluation mode
     with torch.no_grad():
         for sample in loader:
@@ -172,14 +172,20 @@ def check_accuracy(loader, model):
             num_samples = scores.size(0)
             tot_samples += num_samples
             _, preds = scores.max(1)
-            truepos, falsepos, trueneg, falseneg += evaluate_metrics(preds, y)
+            truepos, falsepos, trueneg, falseneg = evaluate_metrics(preds, y)
+            tot_truepos += truepos
+            tot_falsepos += falsepos
+            tot_trueneg += trueneg
+            tot_falseneg += falseneg
     assert (truepos + falsepos + trueneg + falseneg) == tot_samples
     tot_correct += truepos + trueneg
     print ("tp = %d, fp = %d, tn = %d, fn = %d"%(truepos, falsepos, trueneg, falseneg))
     acc = float(tot_correct)/tot_samples
+    '''
     for name, param in model.named_parameters():
         if param.requires_grad:
             print (name, param.data)
+    '''
     return acc
 
 betas = (0.9, 0.999)
