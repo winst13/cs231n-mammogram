@@ -238,6 +238,7 @@ class MammogramDenseNet(nn.Module):
         if self.debug: print("After all convolutions:", features)
 
         out = F.relu(features, inplace=True) # Last Relu, bc most recent was a conv
+        print("out.size() =", out.size(), "| Number of zeros after final relu:", (out == 0).sum())
 
         out = F.max_pool2d(out, kernel_size=(2,2), stride=2)
         resolution /= 2
