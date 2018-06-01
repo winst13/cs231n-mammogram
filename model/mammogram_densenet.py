@@ -160,79 +160,105 @@ class MammogramDenseNet(nn.Module):
     """ Description
     """
 
-    def __init__(self, growth_rate=32, block_config=(12,6),
-                 bn_size=4, drop_rate=0, pretrained_encoder=True, debug=False):
+    def __init__(self, growth_rate=32, block_config=(6,12,18,12),
+                 bn_size=4, drop_rate=0., pretrained_encoder=True, debug=False):
+        """
+        bn_size = bottleneck size, the factor by which the first conv in a _DenseLayer
+            is larger than the second conv.
+        """
 
         super(MammogramDenseNet, self).__init__()
         
-        self.num_classes = 2  # Benign (0) or Malignant (1)
+        self.debug = debug
+        self.has_pretrained = pretrained_encoder
+        self.nb_dense_blocks = len(block_config)
+        num_classes = 2  # Benign (0) or Malignant (1)
 
-        if pretrained_encoder:
+        if self.has_pretrained:
             pretrained_layers = get_pretrained_layers() # Densenet-201 default
             self.features = nn.Sequential(pretrained_layers)
 
             # Display shapes for debugging
             if debug:
-                print("Displaying the output shape of the encoder (batch, channels, H, W):")
+                print("Output shape after the pretrained modules (batch, channels, H, W):")
                 # summary() printout takes a lot of time, but more comprehensive info
                 #summary(self.features)
 
-                test_input = torch.rand(2,1,1024,1024)
+                test_input = torch.rand(1,1,1024,1024)
                 test_output = self.features(test_input)
                 print(test_output.size())
+                del test_input
+                del test_output
                 # test_output: (-1, 256, 256, 256)
         else:
+            print("No pretrained layers.")
             self.features = nn.Sequential() # Empty model if no pretrained encoder
 
         # A counter to track what input shape our final nn.Linear layer should expect
         #  Just num_channels is fine, because global avg pool at end
-        num_total_features = 256 if pretrained_encoder else 1
+        
 
         # Add the rest of the architecture (Dense blocks, transition layers)
-        # self.features.add_module(...) 
+        num_features = 256 if pretrained_encoder else 1
 
-        """
-        num_features = num_init_features
         for i, num_layers in enumerate(block_config):
             block = _DenseBlock(num_layers=num_layers, num_input_features=num_features,
                                 bn_size=bn_size, growth_rate=growth_rate, drop_rate=drop_rate)
             self.features.add_module('denseblock%d' % (i + 1), block)
             num_features = num_features + num_layers * growth_rate
-            if i != len(block_config) - 1:
+            if debug: print("num features after denseblock %d:" % (i + 1), num_features)
+
+            if i != self.nb_dense_blocks - 1:
                 trans = _Transition(num_input_features=num_features, num_output_features=num_features // 2)
                 self.features.add_module('transition%d' % (i + 1), trans)
                 num_features = num_features // 2
-        """
+                if debug: print("num features after transition %d:" % (i + 1), num_features)
 
+        if debug: print("final num features:", num_features)
 
-        # Put the classifier here separately (will apply it manually in forward(x))
-        self.classifier = None # nn.Linear(...)
+        # Put the classifier here separately 
+        #  will apply it manually in forward(x), after global avg pool and reshape
+        self.classifier = nn.Linear(num_features, num_classes)
 
 
         # The official init loop idiom from the PyTorch repo for densenet.
         #  Initialize only the layers that have .requres_grad=True.
-        """
         for m in self.modules():
-            if isinstance(m, nn.Conv2d):
+            if isinstance(m, nn.Conv2d) and m.weight.requires_grad:
                 nn.init.kaiming_normal_(m.weight)
-            elif isinstance(m, nn.BatchNorm2d):
+                # Conv layers have no bias when in conjunction with Batchnorm
+            elif isinstance(m, nn.BatchNorm2d) and m.weight.requires_grad:
                 nn.init.constant_(m.weight, 1)
                 nn.init.constant_(m.bias, 0)
-            elif isinstance(m, nn.Linear):
+            elif isinstance(m, nn.Linear) and m.weight.requires_grad:
+                # m.weight is already initialized
                 nn.init.constant_(m.bias, 0)
-        """
 
 
     def forward(self, x):
+        resolution = 256 if self.has_pretrained else 1024
+        resolution /= 2 ** (self.nb_dense_blocks - 1)
+
         features = self.features(x)
+        if self.debug: print("After all convolutions:", features.size())
+
         out = F.relu(features, inplace=True) # Last Relu, bc most recent was a conv
+
+        out = F.max_pool2d(out, kernel_size=(4,4), stride=4)
+        resolution /= 4
+        if self.debug: print("After max pool:", out.size())
 
         # Note: The .view() below is probably why the classifier is separate
         #   Idiomatic in Pytorch to reshape in forward function. No reshape() module.
-        # out = F.avg_pool2d(out, kernel_size=7, stride=1).view(features.size(0), -1)
+        out = F.avg_pool2d(out, kernel_size=(resolution, resolution), stride=1) # global avg pool
+        if self.debug: print("After avg pool:", out.size())
 
+        out = out.view(features.size(0), -1)
+        if self.debug: print("After flatten:", out.size())
+        
         # Classifier created in __init__
         out = self.classifier(out)
+        return out
 
 
 
