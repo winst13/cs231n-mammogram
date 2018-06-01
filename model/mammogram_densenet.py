@@ -3,7 +3,6 @@ from torch import nn
 from torch.nn import functional as F
 from torchvision.models import densenet
 from torchvision.models.densenet import _DenseBlock, _Transition
-import torchsummary
 
 #import code
 from copy import deepcopy
