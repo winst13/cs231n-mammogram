@@ -203,6 +203,8 @@ elif model_name == "reducedense":
     model = get_reduced_densenet()
 else:
     print ("bad --model parameter")
+
+print (model)
     
 #optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), 
 #                       lr=learning_rate, betas = betas, weight_decay=1e-3)
