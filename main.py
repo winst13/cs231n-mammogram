@@ -178,7 +178,7 @@ def check_accuracy(loader, model):
             tot_falseneg += falseneg
     print ("tp = %d, fp = %d, tn = %d, fn = %d, tot = %d"%(tot_truepos, tot_falsepos, tot_trueneg, tot_falseneg, tot_samples))
     assert (tot_truepos + tot_falsepos + tot_trueneg + tot_falseneg) == tot_samples
-    tot_correct += truepos + trueneg
+    tot_correct += tot_truepos + tot_trueneg
     acc = float(tot_correct)/tot_samples
     '''
     for name, param in model.named_parameters():
@@ -192,13 +192,13 @@ betas = (0.9, 0.999)
 if model_name == "baseline":
     model = BaselineModel()
 elif model_name == "tinydense":
-    model = get_tiny_densenet(debug = debug)
+    model = get_tiny_densenet(swish = True, debug = debug)
 elif model_name == "smalldense":
-    model = get_small_densenet(debug = debug)
+    model = get_small_densenet(swish = True, debug = debug)
 elif model_name == "mediumdense":
-    model = get_medium_densenet(debug = debug)
+    model = get_medium_densenet(swish = True, debug = debug)
 elif model_name == "largedense":
-    model = get_large_densenet(debug = debug)
+    model = get_large_densenet(swish = True, debug = debug)
 else:
     print ("bad --model parameter")
     
