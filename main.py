@@ -199,6 +199,8 @@ elif model_name == "mediumdense":
     model = get_medium_densenet(swish = True, debug = debug)
 elif model_name == "largedense":
     model = get_large_densenet(swish = True, debug = debug)
+elif model_name == "reducedense":
+    model = get_reduced_densenet()
 else:
     print ("bad --model parameter")
     
