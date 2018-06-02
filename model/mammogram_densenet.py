@@ -92,7 +92,7 @@ def summary(model, input_size=(1, 1024, 1024)):
     torchsummary.summary(model, input_size)
 
 
-def get_pretrained_layers(model_name='densenet201'):
+def get_pretrained_layers(model_name='densenet201', include_denseblock=True):
 
     # Use Densenet-201 by default
 
@@ -128,12 +128,13 @@ def get_pretrained_layers(model_name='densenet201'):
     first_maxpool = deepcopy(old_model.features[3])
     layers.append(('maxpool0', first_maxpool))
 
-    # The first dense block: 6 dense layers
-    #   (each is 1x1 conv -> 3x3 conv, w/ appropriate relu and batchnorm)
-    print("Copying features[4]: %s..." % type(old_model.features[4])) # print only type: DB has too much text
-    denseblock = deepcopy(old_model.features[4])
-    #freeze_parameters(denseblock)
-    layers.append(('denseblock0', denseblock))
+    if include_denseblock:
+        # The first dense block: 6 dense layers
+        #   (each is 1x1 conv -> 3x3 conv, w/ appropriate relu and batchnorm)
+        print("Copying features[4]: %s..." % type(old_model.features[4])) # print only type: DB has too much text
+        denseblock = deepcopy(old_model.features[4])
+        #freeze_parameters(denseblock)
+        layers.append(('denseblock0', denseblock))
 
     layers = OrderedDict(layers)
 
@@ -157,25 +158,29 @@ class MammogramDenseNet(nn.Module):
     """
 
     def __init__(self, growth_rate=32, block_config=(6,12,18,12),
-                 bn_size=4, drop_rate=0., pretrained_encoder=True, debug=False):
+                 bn_size=4, drop_rate=0., pretrained_encoder=2, debug=False):
         """
         bn_size = bottleneck size, the factor by which the first conv in a _DenseLayer
             is larger than the second conv.
+        :pretrained_encoder: int in [0,1,2] designating level of pretrained layers to use.
+            0 is none, 1 is just first convolutions, 2 is the first dense block.
         """
 
         super(MammogramDenseNet, self).__init__()
         
         self.debug = debug
-        self.has_pretrained = pretrained_encoder
+        self.pretrained = pretrained_encoder
         self.nb_dense_blocks = len(block_config)
         num_classes = 2  # Benign (0) or Malignant (1)
 
-        if self.has_pretrained:
-            pretrained_layers = get_pretrained_layers() # Densenet-201 default
+        if self.pretrained > 0:
+            include_denseblock = self.pretrained == 2
+            pretrained_layers = get_pretrained_layers(include_denseblock=include_denseblock)
             self.features = nn.Sequential(pretrained_layers)
 
             # Display shapes for debugging
             if debug:
+                print("pretrained_encoder = %d" % pretrained_encoder)
                 print("Output shape after the pretrained modules (batch, channels, H, W):")
                 # summary() printout takes a lot of time, but more comprehensive info
                 #summary(self.features)
@@ -192,7 +197,7 @@ class MammogramDenseNet(nn.Module):
 
         # A counter to track what input shape our final nn.Linear layer should expect
         #  Just num_channels is fine, because global avg pool at end
-        num_features = 256 if pretrained_encoder else 1
+        num_features = 256 if self.pretrained == 2 else (64 if self.pretrained == 1 else 1)
 
         # Add the rest of the architecture (Dense blocks, transition layers)
         for i, num_layers in enumerate(block_config):
@@ -213,11 +218,11 @@ class MammogramDenseNet(nn.Module):
             num_features = num_features + num_layers * growth_rate
             if debug: print("num features after denseblock %d:" % (i + 1), num_features)
 
-            # Add a transition layer if not the last dense block
+            # Add a transition layer if not the last dense block:
+            #  Norm, 1x1 Conv, (activation), AvgPool
             if i != self.nb_dense_blocks - 1:
-                trans = _Transition(num_input_features=num_features, num_output_features=num_features // 2)
+                trans = _Transition(num_input_features=num_features, num_output_features=num_features)
                 self.features.add_module('transition%d' % (i + 1), trans)
-                num_features = num_features // 2
                 if debug: print("num features after transition %d:" % (i + 1), num_features)
 
         if debug: print("final num features:", num_features)
@@ -241,34 +246,24 @@ class MammogramDenseNet(nn.Module):
 
 
     def forward(self, x):
-        resolution = 256 if self.has_pretrained else 1024
-        resolution /= 2 ** (self.nb_dense_blocks - 1)
-        
         x = self.preprocess(x)
 
         features = self.features(x)
-        if self.debug: print("After all convolutions:", features)
+        if self.debug: print("After all convolutions:", features.size())
 
         out = F.relu(features, inplace=True) # Last Relu, bc most recent was a conv
         print("out.size() =", out.size(), "| Number of zeros after final relu:", (out == 0).sum())
 
-        out = F.max_pool2d(out, kernel_size=(2,2), stride=2)
-        resolution /= 2
-        if self.debug: print("After max pool:", out)
-
-        # Note: The .view() below is probably why the classifier is separate
-        #   Idiomatic in Pytorch to reshape in forward function. No reshape() module.
-        out = F.avg_pool2d(out, kernel_size=(resolution, resolution), stride=1) # global avg pool
-        if self.debug: print("After avg pool:", out)
+        # Global average pooling
+        resolution = out.size(2)
+        out = F.avg_pool2d(out, kernel_size=(resolution, resolution), stride=1)
+        if self.debug: print("After avg pool:", out.size())
 
         out = out.view(features.size(0), -1)
-        if self.debug: print("After flatten:", out)
         
         # Classifier created in __init__
         out = self.classifier(out)
-        if self.debug: print(out)
+        if self.debug: print(out.size())
         return out
-
-
 
 

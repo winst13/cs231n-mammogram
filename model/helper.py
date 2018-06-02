@@ -1,22 +1,36 @@
 from model.mammogram_densenet import MammogramDenseNet, Swish
 from torchvision.models.densenet import _DenseBlock, _Transition
 
+def get_reduced_densenet(**kwargs):
+    swish = True
+    model = MammogramDenseNet(block_config=(3,3,3), pretrained_encoder=1, **kwargs)
+    if swish:
+        model = replace_relu_with_swish(model)
+    return model
 
 def get_tiny_densenet(swish=False, **kwargs):
     model = MammogramDenseNet(block_config=(6,), **kwargs)
-    return replace_relu_with_swish(model)
+    if swish:
+        model = replace_relu_with_swish(model)
+    return model
 
 def get_small_densenet(swish=False, **kwargs):
     model = MammogramDenseNet(block_config=(10, 6), **kwargs)
-    return replace_relu_with_swish(model)
+    if swish:
+        model = replace_relu_with_swish(model)
+    return model
 
 def get_medium_densenet(swish=False, **kwargs):
     model = MammogramDenseNet(block_config=(8, 12, 8), **kwargs)
-    return replace_relu_with_swish(model)
+    if swish:
+        model = replace_relu_with_swish(model)
+    return model
 
 def get_large_densenet(swish=False, **kwargs):
     model = MammogramDenseNet(block_config = (6,12,18,12), **kwargs) # Default block config
-    return replace_relu_with_swish(model)
+    if swish:
+        model = replace_relu_with_swish(model)
+    return model
 
 
 def replace_relu_with_swish(model):
