@@ -252,7 +252,7 @@ class MammogramDenseNet(nn.Module):
         if self.debug: print("After all convolutions:", features.size())
 
         #out = F.relu(features, inplace=True) # Last Relu, bc most recent was a conv
-        final_swish = Swish()
+        final_swish = Swish().cuda()
         out = final_swish.forward(features)
         print("out.size() =", out.size(), "| Number of zeros after final relu:", (out == 0).sum())
 
