@@ -57,6 +57,7 @@ assert load_check == False or load_best == False
 if mode == 'vis':  assert load_check == True or load_best == True
     
 # CONSTANTS
+# unused rn
 IMAGE_SIZE = 1024*1024
 
 # The torchvision.transforms package provides tools for preprocessing data
@@ -119,6 +120,7 @@ def train(loader_train, loader_val, model, optimizer, epoch, loss_list = []):
             y = y.to(device=device, dtype=torch.long)
 
             scores = model(x)
+            print("Predicted scores are:", scores)
             optimizer.zero_grad()
             loss = F.cross_entropy(scores, y)
             loss.backward()
