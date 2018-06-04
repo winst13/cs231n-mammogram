@@ -86,7 +86,7 @@ loader_train = DataLoader(train_data, batch_size=BATCH_SIZE, sampler=sampler.Sub
 loader_val = DataLoader(train_data, batch_size=BATCH_SIZE, sampler=sampler.SubsetRandomSampler(range(NUM_TRAIN, 
                                                                                               NUM_TRAIN + NUM_VAL)))
 loader_test = DataLoader(test_data, batch_size=BATCH_SIZE)
-loader_tiny_train = DataLoader(train_data, batch_size=BATCH_SIZE, sampler=sampler.SubsetRandomSampler(range(100)))
+loader_tiny_train = DataLoader(train_data, batch_size=BATCH_SIZE, sampler=sampler.SubsetRandomSampler(range(101)))
 loader_tiny_val = DataLoader(train_data, batch_size=BATCH_SIZE, sampler=sampler.SubsetRandomSampler(range(100, 200)))
 
 dtype = torch.float32
@@ -123,7 +123,7 @@ def train(loader_train, loader_val, model, optimizer, epoch, loss_list = []):
             x = x.to(device=device, dtype=dtype)
             y = y.to(device=device, dtype=torch.float)
 
-            scores = model(x).squeeze()
+            scores = model(x).view(-1, 1)
             print("Predicted scores are:", scores)
             optimizer.zero_grad()
             loss = F.binary_cross_entropy(scores, y)
