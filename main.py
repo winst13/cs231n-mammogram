@@ -123,7 +123,7 @@ def train(loader_train, loader_val, model, optimizer, epoch, loss_list = []):
             x = x.to(device=device, dtype=dtype)
             y = y.to(device=device, dtype=torch.float)
 
-            scores = model(x).view(-1, 1)
+            scores = model(x).view(-1)
             print("Predicted scores are:", scores)
             optimizer.zero_grad()
             loss = F.binary_cross_entropy(scores, y)
