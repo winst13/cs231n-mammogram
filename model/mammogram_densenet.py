@@ -274,16 +274,15 @@ class MammogramDenseNet(nn.Module):
         #out = F.relu(features, inplace=True) # Last Relu, bc most recent was a conv
         final_swish = Swish().cuda()
         out = final_swish.forward(features)
-        print("out.size() =", out.size(), "| Number of zeros after final relu:", (out == 0).sum())
+        #print("out.size() =", out.size(), "| Number of zeros after final relu:", (out == 0).sum())
+
+        # increase max pool receptive field to alleviate the issue below
+        out = F.max_pool2d(out, kernel_size=(4,4), stride=4)
 
         # Global average pooling
         # Hypothesis: Maybe this average pooling is "washing out" useful features at the end,
         #  and that's why our model predicts class 0 (benign) all the time,
         #  cause most parts of the image are normal.
-
-        # increase max pool receptive field to alleviate that issue a bit
-        out = F.max_pool2d(out, kernel_size=(4,4), stride=4)
-
         resolution = out.size(2)
         if self.debug: print("Resolution is:", resolution)
         out = F.avg_pool2d(out, kernel_size=(resolution, resolution), stride=1)

@@ -9,9 +9,10 @@ def get_saliency_map(model, x):
         :model: A module, already trained. we freeze weights and get input gradients
         :x: The input image tensor (-1, 1, 1024, 1024).
     """
-    x = torch.tensor(x) # If type(x) is not torch.tensor
-    x.requires_grad = True
+    x = torch.tensor(x)
+    x.requires_grad = True # gradient wrt image
 
+    # Freeze params, we're not updating weights
     for p in model.parameters():
         p.requires_grad = False
     
