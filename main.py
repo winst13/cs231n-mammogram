@@ -63,6 +63,8 @@ IMAGE_SIZE = 1024*1024
 # and for performing data augmentation; here we set up a transform to
 # preprocess the data by subtracting the mean RGB value and dividing by the
 # standard deviation of each RGB value; we've hardcoded the mean and std.
+
+# Not used rn
 transform = T.Compose([
                 T.ToTensor(),
                 T.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))
