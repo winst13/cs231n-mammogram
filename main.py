@@ -199,8 +199,12 @@ elif model_name == "mediumdense":
     model = get_medium_densenet(swish = True, debug = debug)
 elif model_name == "largedense":
     model = get_large_densenet(swish = True, debug = debug)
+elif model_name == "reducedense":
+    model = get_reduced_densenet()
 else:
     print ("bad --model parameter")
+
+print (model)
     
 #optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), 
 #                       lr=learning_rate, betas = betas, weight_decay=1e-3)
