@@ -89,6 +89,7 @@ def summary(model, input_size=(1, 1024, 1024)):
         param |model|: nn.Module subclass or -.Sequential model
     """
     # Assume method will be used on MammogramDenseNet by default
+    import torchsummary
     torchsummary.summary(model, input_size)
 
 
@@ -188,32 +189,46 @@ class MammogramDenseNet(nn.Module):
         self.debug = debug
         self.pretrained = pretrained_encoder
         self.nb_dense_blocks = len(block_config)
-        num_classes = 2  # Benign (0) or Malignant (1)
+        num_classes = 1  # indicator score of whether it is malignant
 
-        if self.pretrained > 0:
-            include_denseblock = self.pretrained == 2
-            pretrained_layers = get_pretrained_layers(include_denseblock=include_denseblock)
-            self.features = nn.Sequential(pretrained_layers)
 
-            # Display shapes for debugging
-            if debug:
-                print("pretrained_encoder = %d" % pretrained_encoder)
-                print("Output shape after the pretrained modules (batch, channels, H, W):")
-                # summary() printout takes a lot of time, but more comprehensive info
+        include_denseblock = self.pretrained == 2
+        pretrained_layers = get_pretrained_layers(include_denseblock=include_denseblock)
+        self.features = nn.Sequential(pretrained_layers)
 
-                test_input = torch.rand(1,1,1024,1024)
-                test_output = self.features(test_input)
-                print(test_output.size())
-                del test_input
-                del test_output
+        if self.pretrained == 0: # Re-initialize layers; don't use pretrained weights inside
+            print("self.pretrained = 0. Re-initializing weights")
+            for m in self.features.modules():
+                
+                if isinstance(m, nn.Conv2d):
+                    old_m = deepcopy(m)
+                    nn.init.kaiming_normal_(m.weight)
+                    # Conv layers have no bias when in conjunction with Batchnorm
+                elif isinstance(m, nn.BatchNorm2d):
+                    old_m = deepcopy(m)
+                    nn.init.constant_(m.weight, 1)
+                    nn.init.constant_(m.bias, 0)
+                else:
+                    continue
 
-        else:
-            print("No pretrained layers.")
-            self.features = nn.Sequential() # Empty model if no pretrained encoder
+                print("old m is", old_m.weight)
+                print("new m is", m.weight)
+
+        # Display shapes for debugging
+        if debug:
+            print("pretrained_encoder = %d" % pretrained_encoder)
+            print("Output shape after the pretrained modules (batch, channels, H, W):")
+            # summary() printout takes a lot of time, but more comprehensive info
+
+            test_input = torch.rand(1,1,1024,1024)
+            test_output = self.features(test_input)
+            print(test_output.size())
+            del test_input
+            del test_output
 
         # A counter to track what input shape our final nn.Linear layer should expect
         #  Just num_channels is fine, because global avg pool at end
-        num_features = 256 if self.pretrained == 2 else (64 if self.pretrained == 1 else 1)
+        num_features = 256 if self.pretrained == 2 else 64
 
         # Add the rest of the architecture (Dense blocks, transition layers)
         for i, num_layers in enumerate(block_config):
@@ -249,7 +264,6 @@ class MammogramDenseNet(nn.Module):
         nn.init.constant_(self.classifier.bias, 0)
 
         if debug: 
-            import torchsummary
             summary(self.features)
 
 
@@ -277,7 +291,7 @@ class MammogramDenseNet(nn.Module):
         #print("out.size() =", out.size(), "| Number of zeros after final relu:", (out == 0).sum())
 
         # increase max pool receptive field to alleviate the issue below
-        out = F.max_pool2d(out, kernel_size=(4,4), stride=4)
+        out = F.max_pool2d(out, kernel_size=(2,2), stride=2)
 
         # Global average pooling
         # Hypothesis: Maybe this average pooling is "washing out" useful features at the end,
@@ -293,6 +307,8 @@ class MammogramDenseNet(nn.Module):
         # Classifier created in __init__
         out = self.classifier(out)
         if self.debug: print(out.size())
+
+        out = F.sigmoid(out) # Classify activation
         return out
 
 
