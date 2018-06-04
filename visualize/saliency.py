@@ -16,7 +16,7 @@ def get_saliency_map(model, x):
     for p in model.parameters():
         p.requires_grad = False
     
-    model(x)
+    scores = model(x)
     model.backward()
 
     pass
