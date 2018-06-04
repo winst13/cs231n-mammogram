@@ -135,6 +135,7 @@ def train(loader_train, loader_val, model, optimizer, epoch, loss_list = []):
             num_samples = scores.size(0)
             preds = scores > 0.5
             truepos, falsepos, trueneg, falseneg = evaluate_metrics(preds, y)
+            print ("tp = %d, fp = %d, tn = %d, fn = %d, tot = %d"%(truepos, falsepos, trueneg, falseneg, num_samples))
             assert (truepos + falsepos + trueneg + falseneg) == num_samples
             num_correct = truepos + trueneg
             tot_correct += num_correct
@@ -177,7 +178,7 @@ def check_accuracy(loader, model, cutoff = 0.5):
             y = sample['label']
             x = x.to(device=device, dtype=dtype)  # move to device, e.g. GPU
             y = y.to(device=device, dtype=torch.long)
-            scores = model(x).squeeze()
+            scores = model(x).view(-1, 1)
             tot_samples += scores.size(0)
             preds = scores > 0.5
             truepos, falsepos, trueneg, falseneg = evaluate_metrics(preds, y)
