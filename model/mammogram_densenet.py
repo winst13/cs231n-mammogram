@@ -3,6 +3,7 @@ from torch import nn
 from torch.nn import functional as F
 from torchvision.models import densenet
 from torchvision.models.densenet import _DenseBlock, _Transition
+import torchsummary
 
 #import code
 from copy import deepcopy
@@ -109,6 +110,7 @@ def get_pretrained_layers(model_name='densenet201', include_denseblock=True):
     # The first Conv2d layer
     print("Copying features[0]: %s..." % old_model.features[0])
     first_conv = transform_filters_to_grayscale(old_model.features[0])
+    first_conv.weight.requires_grad = True # Just in case
     layers.append(('conv0', first_conv))
     # Don't freeze layers: We will keep training it, because the domain isn't the same as ImageNet
     
@@ -153,6 +155,22 @@ class Swish(nn.Module):
         return x * F.sigmoid(self.beta * x)
 
 
+
+class _SimpleDenseLayer(nn.Sequential):
+
+    def __init__(self, params):
+        super(_SimpleDenseLayer, self).__init__()
+
+
+class _SimpleDenseBlock(nn.Sequential):
+
+    def __init__(self, params):
+        super(_SimpleDenseBlock, self).__init__()
+
+    def forward(self, x):
+        pass
+
+
 class MammogramDenseNet(nn.Module):
     """ Description
     """
@@ -183,14 +201,13 @@ class MammogramDenseNet(nn.Module):
                 print("pretrained_encoder = %d" % pretrained_encoder)
                 print("Output shape after the pretrained modules (batch, channels, H, W):")
                 # summary() printout takes a lot of time, but more comprehensive info
-                #summary(self.features)
 
                 test_input = torch.rand(1,1,1024,1024)
                 test_output = self.features(test_input)
                 print(test_output.size())
                 del test_input
                 del test_output
-                # test_output: (-1, 256, 256, 256)
+
         else:
             print("No pretrained layers.")
             self.features = nn.Sequential() # Empty model if no pretrained encoder
@@ -232,6 +249,8 @@ class MammogramDenseNet(nn.Module):
         self.classifier = nn.Linear(num_features, num_classes)
         nn.init.constant_(self.classifier.bias, 0)
 
+        if debug: summary(self.features)
+
 
     def preprocess(self, x):
         """ Sample preprocessing code and statistics examples are at:
@@ -255,7 +274,15 @@ class MammogramDenseNet(nn.Module):
         print("out.size() =", out.size(), "| Number of zeros after final relu:", (out == 0).sum())
 
         # Global average pooling
+        # Hypothesis: Maybe this average pooling is "washing out" useful features at the end,
+        #  and that's why our model predicts class 0 (benign) all the time,
+        #  cause most parts of the image are normal.
+
+        # increase max pool receptive field to alleviate that issue a bit
+        out = F.max_pool2d(out, kernel_size=(4,4), stride=4)
+
         resolution = out.size(2)
+        if self.debug: print("Resolution is:", resolution)
         out = F.avg_pool2d(out, kernel_size=(resolution, resolution), stride=1)
         if self.debug: print("After avg pool:", out.size())
 

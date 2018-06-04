@@ -3,7 +3,7 @@ from torchvision.models.densenet import _DenseBlock, _Transition
 
 def get_reduced_densenet(**kwargs):
     swish = True
-    model = MammogramDenseNet(block_config=(3,3,3), pretrained_encoder=1, **kwargs)
+    model = MammogramDenseNet(block_config=(2,2,2,2), pretrained_encoder=1, **kwargs)
     if swish:
         model = replace_relu_with_swish(model)
     return model
