@@ -20,6 +20,7 @@ class BaselineModel(nn.Module):
                 model.bias.data.fill_(0) 
         
         self.features = nn.Sequential(
+            nn.Dropout2d(drop_rate),
             nn.Conv2d(1, 3, 3, padding=1),
             nn.Dropout2d(drop_rate),
             nn.MaxPool2d(2),
@@ -30,8 +31,8 @@ class BaselineModel(nn.Module):
             nn.Dropout2d(drop_rate),
             nn.MaxPool2d(2),
             Flatten(),
-            nn.Linear(3*128*128, 2),
-            nn.Dropout(drop_rate)
+            nn.Linear(3*128*128, 1),
+            nn.Sigmoid()
         )
         self.features.apply(init_weights)  
             
