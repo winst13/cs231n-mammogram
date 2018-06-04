@@ -143,7 +143,7 @@ def train(loader_train, loader_val, model, optimizer, epoch, loss_list = [], val
 
             if t % print_every == 0:
                 batch_acc = float(num_correct)/num_samples
-                print('Iteration %d: batch train accuracy = %06f, loss = %06f'%(t, batch_acc, float(loss)))
+                print('Iteration %d: batch train accuracy = %06f, loss = %06f'%(t, batch_acc, float(loss.item())))
                 
         val_acc = check_accuracy(loader_val, model)
         val_acc_list.append(val_acc)
