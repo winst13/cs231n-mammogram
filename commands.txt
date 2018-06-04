@@ -1,0 +1,5 @@
+This command executes the tiny densenet on tiny version of dataset
+python3 main.py --mode=tiny --save_every=1 --print_every=1 --exp_name=toy_dense --model=reducedense --batch_size=2 --lr=2e-3
+
+This command executes the baseline on the whole dataset
+python3 main.py --mode=train --save_every=1 --print_every=1 --exp_name=baseline --model=baseline --batch_size=10 --lr=2e-3 --dropout=0 --l2reg=0

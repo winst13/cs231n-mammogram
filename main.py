@@ -33,6 +33,8 @@ parser.add_argument("--model_file", help="mandatory argument, specify which file
 parser.add_argument("--exp_name", help="mandatory argument, specify the name of the experiment")
 parser.add_argument("--model", help="mandatory argument, specify the model being used")
 parser.add_argument("--lr", default=5e-3, type=float, help="learning rate")
+parser.add_argument("--dropout", default=0, type=float, help="dropout rate.  higher = more dropout")
+parser.add_argument("--l2reg", default=0, type=float, help="l2 regularization rate")
 args = parser.parse_args()
 
 #Setup
@@ -47,6 +49,8 @@ save_every = args.save_every
 exp_name = args.exp_name
 model_name = args.model
 learning_rate = args.lr
+dropout = args.dropout
+l2reg = args.l2reg
 
 #Hyperparameters
 BATCH_SIZE = args.batch_size
@@ -191,7 +195,7 @@ def check_accuracy(loader, model):
 betas = (0.9, 0.999)
 
 if model_name == "baseline":
-    model = BaselineModel()
+    model = BaselineModel(drop_rate=dropout)
 elif model_name == "tinydense":
     model = get_tiny_densenet(swish = True, debug = debug)
 elif model_name == "smalldense":
@@ -207,8 +211,7 @@ else:
 
 print (model)
     
-optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=learning_rate, betas = betas, weight_decay=1e-3)
-#optimizer = optim.SGD(filter(lambda p: p.requires_grad, model.parameters()), lr=learning_rate, momentum=0.9, nesterov=True)
+optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=learning_rate, betas = betas, weight_decay=l2reg)
 
 epoch = 0
 loss_list = []

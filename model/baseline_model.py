@@ -21,13 +21,17 @@ class BaselineModel(nn.Module):
         
         self.features = nn.Sequential(
             nn.Conv2d(1, 3, 3, padding=1),
+            nn.Dropout2d(drop_rate),
             nn.MaxPool2d(2),
             nn.Conv2d(3, 3, 3, padding=1),
+            nn.Dropout2d(drop_rate),
             nn.MaxPool2d(2),
             nn.Conv2d(3, 3, 3, padding=1),
+            nn.Dropout2d(drop_rate),
             nn.MaxPool2d(2),
             Flatten(),
-            nn.Linear(3*128*128, 2)
+            nn.Linear(3*128*128, 2),
+            nn.Dropout(drop_rate)
         )
         self.features.apply(init_weights)  
             
