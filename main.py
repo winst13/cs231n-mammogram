@@ -201,17 +201,17 @@ betas = (0.9, 0.999)
 if model_name == "baseline":
     model = BaselineModel(drop_rate=dropout)
 elif model_name == "tinydense":
-    model = get_tiny_densenet(swish = True, debug = debug)
+    model = get_tiny_densenet(swish = True, debug = debug, drop_rate=dropout)
 elif model_name == "smalldense":
-    model = get_small_densenet(swish = True, debug = debug)
+    model = get_small_densenet(swish = True, debug = debug, drop_rate=dropout)
 elif model_name == "mediumdense":
-    model = get_medium_densenet(swish = True, debug = debug)
+    model = get_medium_densenet(swish = True, debug = debug, drop_rate=dropout)
 elif model_name == "largedense":
-    model = get_large_densenet(swish = True, debug = debug)
+    model = get_large_densenet(swish = True, debug = debug, drop_rate=dropout)
 elif model_name == "reducedense":
-    model = get_reduced_densenet()
+    model = get_reduced_densenet(drop_rate=dropout)
 elif model_name == "nopretraindense":
-    model = get_nopretrain_densenet()
+    model = get_nopretrain_densenet(drop_rate=dropout)
 else:
     print ("bad --model parameter")
 
