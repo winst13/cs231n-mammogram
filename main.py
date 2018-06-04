@@ -108,6 +108,7 @@ def train(loader_train, loader_val, model, optimizer, epoch, loss_list = []):
     while True:
         tot_correct = 0.0
         tot_samples = 0.0
+        tot_loss = 0.0
         for t, sample in enumerate(loader_train):
             x = sample['image'].unsqueeze(1)
             y = sample['label']
@@ -130,7 +131,7 @@ def train(loader_train, loader_val, model, optimizer, epoch, loss_list = []):
             num_correct = truepos + trueneg
             tot_correct += num_correct
             tot_samples += num_samples
-            
+            tot_loss += loss
 
             if t % print_every == 0:
                 batch_acc = float(num_correct)/num_samples
@@ -146,7 +147,7 @@ def train(loader_train, loader_val, model, optimizer, epoch, loss_list = []):
                 'loss_list' : loss_list,
                 }, val_acc, exp_name)
         print ("EPOCH %d, val accuracy = %06f"%(epoch, float(val_acc)))
-        print ("train accuracy = %06f"%(train_acc))
+        print ("train accuracy = %06f, loss = %06f"%(train_acc, tot_loss))
         '''
         for name, param in model.named_parameters():
             if param.requires_grad:
@@ -206,10 +207,8 @@ else:
 
 print (model)
     
-#optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), 
-#                       lr=learning_rate, betas = betas, weight_decay=1e-3)
-optimizer = optim.SGD(filter(lambda p: p.requires_grad, model.parameters()), 
-                     lr=learning_rate, momentum=0.9, nesterov=True)
+optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=learning_rate, betas = betas, weight_decay=1e-3)
+#optimizer = optim.SGD(filter(lambda p: p.requires_grad, model.parameters()), lr=learning_rate, momentum=0.9, nesterov=True)
 
 epoch = 0
 loss_list = []

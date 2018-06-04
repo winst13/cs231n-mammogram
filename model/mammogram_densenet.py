@@ -3,7 +3,6 @@ from torch import nn
 from torch.nn import functional as F
 from torchvision.models import densenet
 from torchvision.models.densenet import _DenseBlock, _Transition
-import torchsummary
 
 #import code
 from copy import deepcopy
@@ -249,7 +248,9 @@ class MammogramDenseNet(nn.Module):
         self.classifier = nn.Linear(num_features, num_classes)
         nn.init.constant_(self.classifier.bias, 0)
 
-        if debug: summary(self.features)
+        if debug: 
+            import torchsummary
+            summary(self.features)
 
 
     def preprocess(self, x):
