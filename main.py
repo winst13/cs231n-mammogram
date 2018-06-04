@@ -33,6 +33,8 @@ parser.add_argument("--model_file", help="mandatory argument, specify which file
 parser.add_argument("--exp_name", help="mandatory argument, specify the name of the experiment")
 parser.add_argument("--model", help="mandatory argument, specify the model being used")
 parser.add_argument("--lr", default=5e-3, type=float, help="learning rate")
+parser.add_argument("--dropout", default=0, type=float, help="dropout rate.  higher = more dropout")
+parser.add_argument("--l2reg", default=0, type=float, help="l2 regularization rate")
 args = parser.parse_args()
 
 #Setup
@@ -47,6 +49,8 @@ save_every = args.save_every
 exp_name = args.exp_name
 model_name = args.model
 learning_rate = args.lr
+dropout = args.dropout
+l2reg = args.l2reg
 
 #Hyperparameters
 BATCH_SIZE = args.batch_size
@@ -117,19 +121,19 @@ def train(loader_train, loader_val, model, optimizer, epoch, loss_list = []):
             y = sample['label']
             # Move the data to the proper device (GPU or CPU)
             x = x.to(device=device, dtype=dtype)
-            y = y.to(device=device, dtype=torch.long)
+            y = y.to(device=device, dtype=torch.float)
 
-            scores = model(x)
+            scores = model(x).squeeze()
             print("Predicted scores are:", scores)
             optimizer.zero_grad()
-            loss = F.cross_entropy(scores, y)
+            loss = F.binary_cross_entropy(scores, y)
             loss.backward()
             optimizer.step()
             loss_list.append(loss)
             
             #training acc, precision, recall, etc. metrics
             num_samples = scores.size(0)
-            _, preds = scores.max(1)
+            preds = scores > 0.5
             truepos, falsepos, trueneg, falseneg = evaluate_metrics(preds, y)
             assert (truepos + falsepos + trueneg + falseneg) == num_samples
             num_correct = truepos + trueneg
@@ -163,7 +167,7 @@ def train(loader_train, loader_val, model, optimizer, epoch, loss_list = []):
 Takes a data loader and a model, then returns the model's accuracy on
 the data loader's data set
 '''
-def check_accuracy(loader, model):
+def check_accuracy(loader, model, cutoff = 0.5):
     tot_correct, tot_samples = 0, 0
     tot_truepos, tot_falsepos, tot_trueneg, tot_falseneg = 0, 0, 0, 0
     model.eval()  # set model to evaluation mode
@@ -173,9 +177,9 @@ def check_accuracy(loader, model):
             y = sample['label']
             x = x.to(device=device, dtype=dtype)  # move to device, e.g. GPU
             y = y.to(device=device, dtype=torch.long)
-            scores = model(x)
+            scores = model(x).squeeze()
             tot_samples += scores.size(0)
-            _, preds = scores.max(1)
+            preds = scores > 0.5
             truepos, falsepos, trueneg, falseneg = evaluate_metrics(preds, y)
             tot_truepos += truepos
             tot_falsepos += falsepos
@@ -195,7 +199,7 @@ def check_accuracy(loader, model):
 betas = (0.9, 0.999)
 
 if model_name == "baseline":
-    model = BaselineModel()
+    model = BaselineModel(drop_rate=dropout)
 elif model_name == "tinydense":
     model = get_tiny_densenet(swish = True, debug = debug)
 elif model_name == "smalldense":
@@ -206,13 +210,14 @@ elif model_name == "largedense":
     model = get_large_densenet(swish = True, debug = debug)
 elif model_name == "reducedense":
     model = get_reduced_densenet()
+elif model_name == "nopretraindense":
+    model = get_nopretrain_densenet()
 else:
     print ("bad --model parameter")
 
 print (model)
     
-optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=learning_rate, betas = betas, weight_decay=1e-3)
-#optimizer = optim.SGD(filter(lambda p: p.requires_grad, model.parameters()), lr=learning_rate, momentum=0.9, nesterov=True)
+optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=learning_rate, betas = betas, weight_decay=l2reg)
 
 epoch = 0
 loss_list = []
