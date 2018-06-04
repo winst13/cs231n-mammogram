@@ -25,9 +25,10 @@ def load_model(exp_name, model, optimizer, mode = 'checkpoint'):
         model.load_state_dict(checkpoint['state_dict'])
         optimizer.load_state_dict(checkpoint['optimizer'])
         loss_list = checkpoint['loss_list']
+        val_acc_list = checkpoint['val_acc_list']
         print("=> loaded checkpoint '{}' (epoch {})"
               .format(filepath, checkpoint['epoch']))
-        return epoch, loss_list
+        return epoch, loss_list, val_acc_list
     else:
         print("=> no checkpoint found at '{}'".format(filepath))
         return None

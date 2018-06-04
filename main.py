@@ -110,7 +110,7 @@ Take a loader, model, and optimizer.  Use the optimizer to update the model
 based on the training data, which is from the loader.  Does not terminate,
 saves best checkpoint and latest checkpoint
 '''
-def train(loader_train, loader_val, model, optimizer, epoch, loss_list = []):
+def train(loader_train, loader_val, model, optimizer, epoch, loss_list = [], val_acc_list = []):
     model = model.to(device=device)
     while True:
         tot_correct = 0.0
@@ -139,13 +139,14 @@ def train(loader_train, loader_val, model, optimizer, epoch, loss_list = []):
             num_correct = truepos + trueneg
             tot_correct += num_correct
             tot_samples += num_samples
-            tot_loss += loss
+            tot_loss += loss.item()
 
             if t % print_every == 0:
                 batch_acc = float(num_correct)/num_samples
                 print('Iteration %d: batch train accuracy = %06f, loss = %06f'%(t, batch_acc, float(loss)))
                 
         val_acc = check_accuracy(loader_val, model)
+        val_acc_list.append(val_acc)
         train_acc = float(tot_correct)/tot_samples
         if epoch % save_every == 0:
             save_model({
@@ -153,6 +154,7 @@ def train(loader_train, loader_val, model, optimizer, epoch, loss_list = []):
                 'state_dict': model.state_dict(),
                 'optimizer' : optimizer.state_dict(),
                 'loss_list' : loss_list,
+                'val_loss_list': val_loss_list
                 }, val_acc, exp_name)
         print ("EPOCH %d, val accuracy = %06f"%(epoch, float(val_acc)))
         print ("train accuracy = %06f, loss = %06f"%(train_acc, tot_loss))
