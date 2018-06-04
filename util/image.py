@@ -39,12 +39,13 @@ def saliency2imgarray(tensor, savedir=None):
     normed = normalize_between(imgarray, 0, 256, batch=True, dtype=np.uint8) # 0-255 uint8's
 
     if savepath is not None:
+        # Every batch should be in like "visualize_output/1, .../2"
         assert savedir.startswith("visualize_output/")
         for i in range(imgarray.shape[0]):
             filename = "saliency_%d.jpg" % i
             imsave(join(savedir, filename), img[i])
 
-    return img
+    return imgarray
 
 
 
