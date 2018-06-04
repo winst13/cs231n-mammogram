@@ -24,6 +24,6 @@ def get_saliency_map(model, x):
     gradient = x.grad
     print("We got dL/dx of shape", gradient.size())
 
-    gradient = gradient.abs_().mean(1) # 1 = channel dim
+    gradient = gradient.abs_().mean(1) # 1 = channel dim, (-1, 1024, 1024)
 
     return gradient
