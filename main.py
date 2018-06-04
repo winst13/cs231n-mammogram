@@ -85,7 +85,7 @@ loader_test = DataLoader(test_data, batch_size=BATCH_SIZE)
 loader_tiny_train = DataLoader(train_data, batch_size=BATCH_SIZE, sampler=sampler.SubsetRandomSampler(range(100)))
 loader_tiny_val = DataLoader(train_data, batch_size=BATCH_SIZE, sampler=sampler.SubsetRandomSampler(range(100, 200)))
 
-dtype = torch.float32 # we will be using float throughout this tutorial
+dtype = torch.float16
 if USE_GPU and torch.cuda.is_available(): #Determine whether or not to use GPU
     device = torch.device('cuda')
 else:
