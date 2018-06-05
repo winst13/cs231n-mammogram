@@ -35,6 +35,7 @@ parser.add_argument("--model", help="mandatory argument, specify the model being
 parser.add_argument("--lr", default=5e-3, type=float, help="learning rate")
 parser.add_argument("--dropout", default=0, type=float, help="dropout rate.  higher = more dropout")
 parser.add_argument("--l2reg", default=0, type=float, help="l2 regularization rate")
+parser.add_argument("--augment", action='store_true', help='additional argument to add data augmentation')
 args = parser.parse_args()
 
 #Setup
@@ -51,6 +52,7 @@ model_name = args.model
 learning_rate = args.lr
 dropout = args.dropout
 l2reg = args.l2reg
+augment = args.augment
 
 #Hyperparameters
 BATCH_SIZE = args.batch_size
@@ -61,21 +63,18 @@ assert load_check == False or load_best == False
 if mode == 'vis':  assert load_check == True or load_best == True
     
 # CONSTANTS
-# unused rn
 IMAGE_SIZE = 1024*1024
 
-# The torchvision.transforms package provides tools for preprocessing data
-# and for performing data augmentation; here we set up a transform to
-# preprocess the data by subtracting the mean RGB value and dividing by the
-# standard deviation of each RGB value; we've hardcoded the mean and std.
-
-# Not used rn
 transform = T.Compose([
-                T.ToTensor(),
-                T.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))
+                T.RandomResizedCrop(IMAGE_SIZE, scale=(0.9, 1.0), interpolation=PIL.Image.BICUBIC)
+                T.RandomHorizontalFlip(),
+                T.RandomVerticalFlip(),
             ])
 
-train_data = MammogramDataset("data", "train")#Can add transform = transform as an argument
+if augment:
+    train_data = MammogramDataset("data", "train", transform=transform)
+else:
+    train_data = MammogramDataset("data", "train")
 test_data = MammogramDataset("data", "test")
 
 NUM_VAL = int(len(train_data)*VAL_RATIO)
