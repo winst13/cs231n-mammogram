@@ -154,7 +154,7 @@ def train(loader_train, loader_val, model, optimizer, epoch, loss_list = [], val
                 'state_dict': model.state_dict(),
                 'optimizer' : optimizer.state_dict(),
                 'loss_list' : loss_list,
-                'val_loss_list': val_loss_list
+                'val_acc_list': val_acc_list
                 }, val_acc, exp_name)
         print ("EPOCH %d, val accuracy = %06f"%(epoch, float(val_acc)))
         print ("train accuracy = %06f, loss = %06f"%(train_acc, tot_loss))
