@@ -219,7 +219,7 @@ else:
 
 print (model)
 
-if cuda:
+if device == torch.device('cuda'):
     model.cuda()
 
 optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=learning_rate, betas = betas, weight_decay=l2reg)
