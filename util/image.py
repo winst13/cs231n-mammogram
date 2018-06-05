@@ -4,6 +4,8 @@ import torchvision
 from os.path import join
 from scipy.misc import imsave
 
+import matplotlib.pyplot as plt
+
 
 def normalize_between(imgarray, bottom, top, batch=False, dtype=None):
     """ Normalizes between two numbers, but returns ndarray
@@ -25,27 +27,3 @@ def normalize_between(imgarray, bottom, top, batch=False, dtype=None):
         final_array = final_array.astype(dtype)
 
     return final_array
-
-
-def saliency2imgarray(tensor, savedir=None):
-    """ Take in a saliency map tensor, and output as img array. Save if option provided.
-    Batch size should not exist, ideally.
-    Params:
-        :tensor: [(-1,] (1024, 1024) saliency map
-    Return:
-        :img: [(-1,] (1024, 1024, 1) img array
-    """
-    imgarray = tensor.view(-1, 1024, 1024, 1).numpy()
-    normed = normalize_between(imgarray, 0, 256, batch=True, dtype=np.uint8) # 0-255 uint8's
-
-    if savepath is not None:
-        # Every batch should be in like "visualize_output/1, .../2"
-        assert savedir.startswith("visualize_output/")
-        for i in range(imgarray.shape[0]):
-            filename = "saliency_%d.jpg" % i
-            imsave(join(savedir, filename), img[i])
-
-    return imgarray
-
-
-

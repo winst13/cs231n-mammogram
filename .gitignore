@@ -1,8 +1,9 @@
 # Data files
 data/*
 
-# Model parameters
+# Model parameters, archive
 experiments/*
+archive/
 
 #emacs junk
 *~
