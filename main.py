@@ -10,6 +10,7 @@ from torch.nn import functional as F
 
 import numpy as np
 import argparse
+import PIL
 
 from util.util import print
 from util.dataset_class import MammogramDataset
