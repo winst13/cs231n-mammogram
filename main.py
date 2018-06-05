@@ -67,9 +67,11 @@ if mode == 'vis':  assert load_check == True or load_best == True
 IMAGE_SIZE = 1024*1024
 
 transform = T.Compose([
+                T.ToPILImage(),
                 T.RandomResizedCrop(IMAGE_SIZE, scale=(0.9, 1.0), interpolation=PIL.Image.BICUBIC),
                 T.RandomHorizontalFlip(),
                 T.RandomVerticalFlip(),
+                T.ToTensor()
             ])
 
 if augment:
