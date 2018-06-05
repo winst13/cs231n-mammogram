@@ -129,7 +129,7 @@ def train(loader_train, loader_val, model, optimizer, epoch, loss_list = [], val
             loss = F.binary_cross_entropy(scores, y)
             loss.backward()
             optimizer.step()
-            loss_list.append(loss)
+            loss_list.append(loss.item()) ## Fixed. Maybe this line was the memory leak
             
             #training acc, precision, recall, etc. metrics
             num_samples = scores.size(0)
