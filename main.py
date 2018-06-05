@@ -68,7 +68,10 @@ IMAGE_SIZE = 1024*1024
 
 transform = T.Compose([
                 T.ToPILImage(),
-                T.RandomResizedCrop(IMAGE_SIZE, scale=(0.9, 1.0), interpolation=PIL.Image.BICUBIC),
+                #RandomResizedCrop gives memory leaks, following two lines replaces it
+                #T.RandomResizedCrop(IMAGE_SIZE, scale=(0.9, 1.0), interpolation=PIL.Image.BICUBIC),
+                T.Resize(int(1024/0.9) , interpolation=PIL.Image.BICUBIC),
+                T.RandomCrop(1024),
                 T.RandomHorizontalFlip(),
                 T.RandomVerticalFlip(),
                 T.ToTensor()

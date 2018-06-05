@@ -26,9 +26,12 @@ class MammogramDataset(Dataset):
         label, image_name = self.datapoints[idx]
         image_path = os.path.join(self.root_dir, self.dataset, label, image_name)
         image = np.load(image_path, encoding = "bytes")
+        image = np.expand_dims(image, 2)
         
         if self.transform:
             image = self.transform(image)
+            
+        image = np.squeeze(image, 2)
             
         sample = {'image': image, 'label': int(label)}
         return sample
