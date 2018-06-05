@@ -1,12 +1,14 @@
 import numpy as np
 import torch
+from torch import optim
 
 from os.path import join
 
 # Project imports
 from model.mammogram_densenet import MammogramDenseNet
 from model import helper
-from util.image import normalize_between, create_saliency_overlay
+from visualize.saliency import create_saliency_overlay
+from util.image import normalize_between
 from util.checkpoint import load_model
 
 
