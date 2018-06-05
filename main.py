@@ -226,6 +226,7 @@ optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr
 
 epoch = 0
 loss_list = []
+val_acc_list = []
 if load_check:
     epoch, loss_list, val_acc_list = load_model(exp_name, model, optimizer, mode = 'checkpoint')
 if load_best:
