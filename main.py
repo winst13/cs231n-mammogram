@@ -39,6 +39,8 @@ parser.add_argument("--l2reg", default=0, type=float, help="l2 regularization ra
 parser.add_argument("--augment", action='store_true', help='additional argument to add data augmentation')
 args = parser.parse_args()
 
+# python3 main.py --mode=train --save_every=1 --print_every=1 --exp_name=dense3333 --model=reducedense3333 --batch_size=4 --lr=1e-3 --dropout=0.4 --augment
+
 #Setup
 debug = args.debug
 load_check = args.load_check
@@ -217,6 +219,8 @@ elif model_name == "largedense":
     model = get_large_densenet(swish = True, debug = debug, drop_rate=dropout)
 elif model_name == "reducedense":
     model = get_reduced_densenet(drop_rate=dropout)
+elif model_name == "reducedense3333":
+    model = get_reduced_densenet(block_config=(3,3,3,3), drop_rate=dropout)
 elif model_name == "nopretraindense":
     model = get_nopretrain_densenet(drop_rate=dropout)
 else:
