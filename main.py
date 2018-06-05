@@ -227,13 +227,13 @@ optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr
 epoch = 0
 loss_list = []
 if load_check:
-    epoch, loss_list = load_model(exp_name, model, optimizer, mode = 'checkpoint')
+    epoch, loss_list, val_acc_list = load_model(exp_name, model, optimizer, mode = 'checkpoint')
 if load_best:
-    epoch, loss_list = load_model(exp_name, model, optimizer, mode = 'best')
+    epoch, loss_list, val_acc_list = load_model(exp_name, model, optimizer, mode = 'best')
 
 if mode == 'train':
-    train(loader_train, loader_val, model, optimizer, epoch, loss_list = loss_list)
+    train(loader_train, loader_val, model, optimizer, epoch, loss_list = loss_list, val_acc_list = val_acc_list)
 elif mode == 'tiny':
-    train(loader_tiny_train, loader_tiny_val, model, optimizer, epoch, loss_list = loss_list)
+    train(loader_tiny_train, loader_tiny_val, model, optimizer, epoch, loss_list = loss_list, val_acc_list = val_acc_list)
         
 
