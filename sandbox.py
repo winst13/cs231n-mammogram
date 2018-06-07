@@ -20,7 +20,7 @@ if __name__ == "__main__":
     del optimizer # goodbye
 
     filename = "Mass-Test_P_01617_LEFT_CC.npy"
-    imagepath = join("data/mass-test-labeled/1", filename)
+    imagepath = join("visualize_input", filename)
     savepath = join("visualize_output", filename[:-4] + "_saliency.png")
     create_saliency_overlay(model, imagepath, savepath)
 
