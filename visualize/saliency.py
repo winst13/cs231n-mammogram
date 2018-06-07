@@ -1,5 +1,7 @@
 import torch
 import numpy as np
+from matplotlib import pyplot as plt
+
 from util.util import print
 
 
@@ -21,13 +23,17 @@ def get_gradient(model, x):
     try:
         scores = model(x)
     except RuntimeError:
-        scores = model.cuda()(x)
+        model = model.cuda()
+        x = x.cuda()
+        x.requires_grad = True
+        scores = model(x)
     scores.backward()
 
     gradient = x.grad
     print("We got dL/dx of shape", gradient.size())
 
     gradient = gradient.abs_().mean(1) # 1 = channel dim, (-1, 1024, 1024)
+    print("After processing (absval + mean):", gradient.size())
     return gradient
 
 
