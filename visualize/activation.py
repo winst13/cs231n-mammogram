@@ -38,6 +38,7 @@ def get_activation(model, layer, image, device = torch.device('cuda'), dtype = t
     
     print (conv_layer_list)
     print (len(conv_output))
+    print (len(conv_layer_list))
     for i in range(len(conv_layer_list)):
         layer_name = conv_layer_list[i]
         output = conv_output[i]
