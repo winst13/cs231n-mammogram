@@ -29,10 +29,18 @@ def load_model(exp_name, model, optimizer, mode = 'checkpoint', lr = None):
                 param_group['lr'] = lr
         optimizer.load_state_dict(checkpoint['optimizer'])
         loss_list = checkpoint['loss_list']
-        val_acc_list = checkpoint['val_acc_list']
+
+        if 'val_acc_list' in checkpoint.keys():
+            val_acc_list = checkpoint['val_acc_list']
+        else:
+            val_acc_list = None # Back compatibility. Sometimes theres no valacc list, and that's fine
+
         print("=> loaded checkpoint '{}' (epoch {})"
               .format(filepath, checkpoint['epoch']))
-        return epoch, loss_list, val_acc_list
+        
+        return 
+            (epoch, loss_list, val_acc_list) if val_acc_list is not None else
+            (epoch, loss_list)
     else:
         print("=> no checkpoint found at '{}'".format(filepath))
         return None
