@@ -22,7 +22,7 @@ def get_activation(model, layer, image, device = torch.device('cuda'), dtype = t
     
     for module_pos, module in model.features._modules.items():
         print (module_pos)
-        if "conv" in module_pos:
+        if layer in module_pos:
             x = module(x)
             conv_output.append(x)
             conv_layer_list.append(module_pos)
@@ -30,7 +30,7 @@ def get_activation(model, layer, image, device = torch.device('cuda'), dtype = t
             for module_pos_1, module_1 in module._modules.items():
                 print ("\t", module_pos_1)
                 x = module_1(x)
-                if "conv" in module_pos_1:
+                if layer in module_pos_1:
                     conv_output.append(x)
                     conv_layer_list.append(module_pos+", "+module_pos_1)
         else:
@@ -45,5 +45,5 @@ def get_activation(model, layer, image, device = torch.device('cuda'), dtype = t
         activation = np.uint8(activation * 255)  # Scale between 0-255 to visualize
         print (layer_name)
         print (activation)
-    return activation
+    return conv_layer_list, conv_output
     

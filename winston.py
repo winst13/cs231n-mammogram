@@ -31,4 +31,4 @@ if __name__ == "__main__":
     plt.imshow(arr, cmap='gray')
     plt.show()
     
-    activation0 = get_activation(model, "conv", arr)
+    conv_layer_list, conv_output = get_activation(model, "conv", arr)
