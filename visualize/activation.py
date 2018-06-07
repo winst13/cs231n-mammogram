@@ -31,7 +31,7 @@ def get_activation(model, layer, image, device = torch.device('cuda'), dtype = t
                 x = module_1(x)
                 if "conv" in module_pos_1:
                     conv_output.append(x)
-                    conv_layer_list.append(module_pose+", "+module_pos_1)
+                    conv_layer_list.append(module_pos+", "+module_pos_1)
         else:
             x = module(x)
     '''
@@ -59,6 +59,7 @@ def get_activation(model, layer, image, device = torch.device('cuda'), dtype = t
             x = module(x)
     '''
         
+    print (conv_layer_list)
     for output in conv_output:
         print (output.shape)
         activation = output.cpu().data.numpy()[0]
