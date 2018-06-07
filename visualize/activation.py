@@ -11,12 +11,13 @@ from model import helper
 from util.image import normalize_between
 from util.checkpoint import load_model
 
-def get_activation(model, layer, image):
+def get_activation(model, layer, image, device = torch.device('cuda'), dtype = torch.float32):
     model.eval()
     
     # Forward pass on the convolutions
     conv_output = None
     x = torch.from_numpy(image).unsqueeze(0).unsqueeze(0)
+    x = x.to(device=device, dtype=dtype)
     print (x.shape)
     print (model(x))
     '''
