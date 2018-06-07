@@ -38,7 +38,9 @@ def get_activation(model, layer, image, device = torch.device('cuda'), dtype = t
     
     print (conv_layer_list)
     print (len(conv_output))
-    for layer_name, output in zip(conv_layer_list, conv_output):
+    for i in range(len(conv_layer_list)):
+        layer_name = conv_layer_list[i]
+        output = conv_output[i]
         print (output.shape)
         activation = output.cpu().data.numpy()[0]
         #resize to 1024x1024?
