@@ -4,12 +4,19 @@ from torch import optim
 
 from os.path import join
 import matplotlib.pyplot as plt
-from PIL import Image
+from scipy.misc import imsave
 
 from model.mammogram_densenet import MammogramDenseNet
 from model import helper
 from util.image import normalize_between
 from util.checkpoint import load_model
+
+
+def save_activations(conv_layer_list, conv_output, dir_path = "visualize_output/activations"):
+    for name, output in zip(conv_layer_list, conv_output):
+        for i in range(len(conv_output)):
+            print ("saving: ", join(dir_path, name+"_"+str(i))
+            imsave(join(dir_path, name+"_"+str(i)), conv_output[i])
 
 def get_activation(model, layer, image, device = torch.device('cuda'), dtype = torch.float32):
     model.eval()

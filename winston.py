@@ -11,7 +11,7 @@ from model.mammogram_densenet import MammogramDenseNet
 from model import helper
 from util.image import normalize_between
 from util.checkpoint import load_model
-from visualize.activation import get_activation
+from visualize.activation import get_activation, save_activations
 
 
 if __name__ == "__main__":
@@ -32,3 +32,4 @@ if __name__ == "__main__":
     plt.show()
     
     conv_layer_list, conv_output = get_activation(model, "conv", arr)
+    save_activations(conv_layer_list, conv_output)
