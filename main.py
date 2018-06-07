@@ -15,6 +15,7 @@ import PIL
 from util.util import print
 from util.dataset_class import MammogramDataset
 from util.checkpoint import save_model, load_model
+from util.metrics import *
 from model.baseline_model import BaselineModel
 from model.mammogram_densenet import MammogramDenseNet
 from model.helper import *
@@ -104,14 +105,6 @@ else:
 print('using device:', device)
 
 
-def evaluate_metrics(preds, labels):
-    truepos  = ((preds == 1) * (labels == 1)).sum()
-    falsepos = ((preds == 1) * (labels == 0)).sum()
-    trueneg  = ((preds == 0) * (labels == 0)).sum()
-    falseneg = ((preds == 0) * (labels == 1)).sum()
-    return truepos, falsepos, trueneg, falseneg
-
-
 '''
 Take a loader, model, and optimizer.  Use the optimizer to update the model
 based on the training data, which is from the loader.  Does not terminate,
@@ -196,6 +189,11 @@ def check_accuracy(loader, model, cutoff = 0.5):
             tot_falseneg += falseneg
     print ("tp = %d, fp = %d, tn = %d, fn = %d, tot = %d"%(tot_truepos, tot_falsepos, tot_trueneg, tot_falseneg, tot_samples))
     assert (tot_truepos + tot_falsepos + tot_trueneg + tot_falseneg) == tot_samples
+    f1 = get_f_beta(tot_truepos, tot_falsepos, tot_trueneg, tot_falseneg)
+    print ("f1 score = %06f"%(f1))
+    precision = get_precision(tot_truepos, tot_falsepos, tot_trueneg, tot_falseneg)
+    recall = get_recall(tot_truepos, tot_falsepos, tot_trueneg, tot_falseneg)
+    print ("precision = %06f, recall = %06f"%(precision, recall))
     tot_correct += tot_truepos + tot_trueneg
     acc = float(tot_correct)/tot_samples
     '''
