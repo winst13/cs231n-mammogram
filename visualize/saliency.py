@@ -1,5 +1,9 @@
 import torch
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')
+from matplotlib import pyplot as plt
+
 from util.util import print
 
 
@@ -17,14 +21,22 @@ def get_gradient(model, x):
     # Freeze params, we're not updating weights
     for p in model.parameters():
         p.requires_grad = False
+    #print("x requires grad is:", x.requires_grad) True
     
-    scores = model(x)
+    try:
+        scores = model(x)
+    except RuntimeError:
+        model = model.cuda()
+        scores = model(x.cuda())
+    
+    print("We received score(s) ", scores)
     scores.backward()
 
     gradient = x.grad
     print("We got dL/dx of shape", gradient.size())
 
     gradient = gradient.abs_().mean(1) # 1 = channel dim, (-1, 1024, 1024)
+    print("After processing (absval + mean):", gradient.size())
     return gradient
 
 
@@ -41,9 +53,10 @@ def save_saliency_and_image(tensor, image, savepath):
     assert savepath.startswith("visualize_output/")
 
     # https://stackoverflow.com/questions/31877353/overlay-an-image-segmentation-with-numpy-and-matplotlib
-    plt.imshow(image, cmap='gray')
-    plt.imshow(tensor, cmap='hot', alpha=0.7)
+    plt.imshow(image, cmap='gray', alpha=0.5)
+    plt.imshow(tensor, cmap='hot', alpha=1)
     plt.savefig(savepath)
+    print("Saved image to", savepath)
 
 
 def create_saliency_overlay(model, imagepath, savepath):
@@ -55,6 +68,7 @@ def create_saliency_overlay(model, imagepath, savepath):
     """
     assert imagepath.endswith('.npy')
     image = np.load(imagepath)
+    print("Loaded image from", imagepath)
 
     x = image.reshape(1, 1, 1024, 1024)
     raw_gradient = get_gradient(model, x)
