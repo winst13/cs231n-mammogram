@@ -32,6 +32,7 @@ def get_activation(model, layer, image, device = torch.device('cuda'), dtype = t
                             x = module_2(x)
                             conv_output.append(x)
                         else:
+                            print (module_2)
                             x = module_2(x)
                 else:
                     x = module_1(x)
