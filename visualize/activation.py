@@ -27,7 +27,7 @@ def get_activation(model, layer, image, device = torch.device('cuda'), dtype = t
         
     for output in conv_output:
         print (output.shape)
-        activation = output.data.numpy()[0]
+        activation = output.cpu().data.numpy()[0]
         #resize to 1024x1024?
         activation = np.maximum(activation, 0)
         activation = (activation - np.min(activation)) / (np.max(activation) - np.min(activation))  # Normalize between 0-1
