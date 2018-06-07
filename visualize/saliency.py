@@ -1,5 +1,9 @@
 import torch
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')
+from matplotlib import pyplot as plt
+
 from util.util import print
 
 
@@ -17,11 +21,13 @@ def get_gradient(model, x):
     # Freeze params, we're not updating weights
     for p in model.parameters():
         p.requires_grad = False
+    #print("x requires grad is:", x.requires_grad) True
     
     try:
         scores = model(x)
     except RuntimeError:
-        scores = model.cuda()(x)
+        model = model.cuda()
+        scores = model(x.cuda())
     scores.backward()
 
     gradient = x.grad
