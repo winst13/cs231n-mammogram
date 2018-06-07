@@ -16,15 +16,22 @@ def get_activation(model, layer, image, device = torch.device('cuda'), dtype = t
     
     # Forward pass on the convolutions
     conv_output = []
+    conv_layer_list = []
     x = torch.from_numpy(image).unsqueeze(0).unsqueeze(0)
     x = x.to(device=device, dtype=dtype)
     
     for module_pos, module in model.features._modules.items():
         print (module_pos)
-        if "transition" in module_pos:
+        if "conv" in module_pos:
+            x = module(x)
+            conv_layer_list.append(module_pos)
+        elif "transition" in module_pos:
             for module_pos_1, module_1 in module._modules.items():
                 print ("\t", module_pos_1)
                 x = module_1(x)
+                if "conv" in module_pos_1:
+                    conv_output.append(x)
+                    conv_layer_list.append(module_pose+", "+module_pos_1)
         else:
             x = module(x)
     '''
