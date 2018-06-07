@@ -11,7 +11,7 @@ BEST_FILE = "model_best.pth.tar"
 Loads the model at the given path
 https://discuss.pytorch.org/t/saving-and-loading-a-model-in-pytorch/2610/3
 '''
-def load_model(exp_name, model, optimizer, mode = 'checkpoint'):
+def load_model(exp_name, model, optimizer, mode = 'checkpoint', lr = None):
     if mode == 'checkpoint':
         filename = 'checkpoint.pth.tar'
     elif mode == 'best':
@@ -23,6 +23,8 @@ def load_model(exp_name, model, optimizer, mode = 'checkpoint'):
         checkpoint = torch.load(filepath)
         epoch = checkpoint['epoch']
         model.load_state_dict(checkpoint['state_dict'])
+        if lr is not None:
+            checkpoint['optimizer']['lr'] = lr
         optimizer.load_state_dict(checkpoint['optimizer'])
         loss_list = checkpoint['loss_list']
         val_acc_list = checkpoint['val_acc_list']

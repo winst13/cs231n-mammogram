@@ -233,7 +233,7 @@ epoch = 0
 loss_list = []
 val_acc_list = []
 if load_check:
-    epoch, loss_list, val_acc_list = load_model(exp_name, model, optimizer, mode = 'checkpoint')
+    epoch, loss_list, val_acc_list = load_model(exp_name, model, optimizer, mode = 'checkpoint', lr = learning_rate)
 if load_best:
     epoch, loss_list, val_acc_list = load_model(exp_name, model, optimizer, mode = 'best')
 
