@@ -3,3 +3,6 @@ python3 main.py --mode=tiny --save_every=1 --print_every=1 --exp_name=toy_dense 
 
 # This command executes the baseline on the whole dataset
 python3 main.py --mode=train --save_every=1 --print_every=1 --exp_name=baseline --model=baseline --batch_size=10 --lr=2e-3 --dropout=0 --l2reg=0
+
+# Tuesday june 5 3:35pm - waiting for dataset on this machine
+python3 main.py --mode=train --save_every=1 --print_every=1 --exp_name=dense3333 --model=reducedense3333 --batch_size=4 --lr=1e-3 --dropout=0.4 --augment
