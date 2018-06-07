@@ -4,7 +4,7 @@ from torch import optim
 
 from os.path import join
 import matplotlib.pyplot as plt
-from scipy.misc import imsave
+from skimage.io import imsave
 
 from model.mammogram_densenet import MammogramDenseNet
 from model import helper
