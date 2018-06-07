@@ -38,6 +38,7 @@ parser.add_argument("--lr", default=5e-3, type=float, help="learning rate")
 parser.add_argument("--dropout", default=0, type=float, help="dropout rate.  higher = more dropout")
 parser.add_argument("--l2reg", default=0, type=float, help="l2 regularization rate")
 parser.add_argument("--augment", action='store_true', help='additional argument to add data augmentation')
+parser.add_argument("--no_val_list", action='store_true', help="back compatability")
 args = parser.parse_args()
 
 # python3 main.py --mode=train --save_every=1 --print_every=1 --exp_name=dense3333 --model=reducedense3333 --batch_size=4 --lr=1e-3 --dropout=0.4 --augment
@@ -57,6 +58,7 @@ learning_rate = args.lr
 dropout = args.dropout
 l2reg = args.l2reg
 augment = args.augment
+no_val_list = args.no_val_list
 
 #Hyperparameters
 BATCH_SIZE = args.batch_size
@@ -221,6 +223,8 @@ elif model_name == "reducedense3333":
     model = get_reduced_densenet(block_config=(3,3,3,3), drop_rate=dropout)
 elif model_name == "nopretraindense":
     model = get_nopretrain_densenet(drop_rate=dropout)
+elif model_name == "simpledense"
+    model = get_simple_densenet(drop_rate=dropout)
 else:
     print ("bad --model parameter")
 
@@ -235,9 +239,15 @@ epoch = 0
 loss_list = []
 val_acc_list = []
 if load_check:
-    epoch, loss_list, val_acc_list = load_model(exp_name, model, optimizer, mode = 'checkpoint', lr = learning_rate)
+    if no_val_list:
+        epoch, loss_list = load_model(exp_name, model, optimizer, mode = 'checkpoint', lr = learning_rate)
+    else:
+        epoch, loss_list, val_acc_list = load_model(exp_name, model, optimizer, mode = 'checkpoint', lr = learning_rate)
 if load_best:
-    epoch, loss_list, val_acc_list = load_model(exp_name, model, optimizer, mode = 'best')
+    if no_val_list:
+        epoch, loss_list = load_model(exp_name, model, optimizer, mode = 'best')
+    else:
+        epoch, loss_list, val_acc_list = load_model(exp_name, model, optimizer, mode = 'best')
 
 if mode == 'train':
     train(loader_train, loader_val, model, optimizer, epoch, loss_list = loss_list, val_acc_list = val_acc_list)
@@ -245,6 +255,9 @@ elif mode == 'tiny':
     train(loader_tiny_train, loader_tiny_val, model, optimizer, epoch, loss_list = loss_list, val_acc_list = val_acc_list)
 elif mode == 'test':
     acc = check_accuracy(loader_test, model)
+    save_plot(loss_list, epoch)
+    if not no_val_list:
+        save_plot(val_acc_list, epoch)
     print (acc)
         
 

@@ -1,5 +1,6 @@
 import torch
 import numpy as np
+import matplotlib.pyplot as plt
 
 def evaluate_metrics(preds, labels):
     truepos  = ((preds == 1) * (labels == 1)).sum()
@@ -19,3 +20,8 @@ def get_precision(truepos, falsepos, trueneg, falseneg):
 
 def get_recall(truepos, falsepos, trueneg, falseneg):
     return float(truepos)/float(truepos + falseneg)
+
+def save_plot(loss_list, epochs):
+    time = np.linspace(0, epochs, len(loss_list), endpoint=True)
+    plt.plot(time, loss_list)
+    plt.show()
