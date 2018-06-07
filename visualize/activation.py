@@ -14,7 +14,7 @@ from util.checkpoint import load_model
 
 def save_activations(conv_layer_list, conv_output, dir_path = "visualize_output/activations"):
     for name, output in zip(conv_layer_list, conv_output):
-        for i in range(len(conv_output)):
+        for i in range(len(output)):
             print ("saving: ", join(dir_path, name+"_"+str(i)))
             print (output[i])
             imsave(join(dir_path, name+"_"+str(i)), output[i].detach())
