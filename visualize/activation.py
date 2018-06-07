@@ -16,7 +16,7 @@ def get_activation(model, layer, image):
     
     # Forward pass on the convolutions
     conv_output = None
-    x = image
+    x = torch.from_numpy(image)
     for module_pos, module in model.features._modules.items():
         x = module(x)  # Forward
         if int(module_pos) == layer:
