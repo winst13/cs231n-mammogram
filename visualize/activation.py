@@ -27,7 +27,8 @@ def get_activation(model, layer, image, device = torch.device('cuda'), dtype = t
                 if "denselayer" in module_pos_1:
                     for module_pos_2, module_2 in module_1._modules.items():
                         print("\t\t", module_pos_2)
-                        x = module_2(x)
+                        #x = module_2(x)
+                    x = module_1(x)
                 else:
                     x = module_1(x)
         else:
