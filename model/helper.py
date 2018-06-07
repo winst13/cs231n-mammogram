@@ -2,6 +2,14 @@ from model.mammogram_densenet import MammogramDenseNet, Swish
 from torchvision.models.densenet import _DenseBlock, _Transition
 
 
+# Our modified Dense layers and blocks, without 1x1 convs for lightweight
+def get_simple_densenet(block_config=(3,3,3,3,3), **kwargs):
+    model = MammogramDenseNet(block_config=block_config, pretrained_encoder=1, simple=True, **kwargs)
+    # The simple layers already have swish!
+    print("Returned simple dense architecture:")
+    print(model)
+    return model
+
 def get_nopretrain_densenet(block_config=(3,3,3,3), **kwargs):
     swish = True
     model = MammogramDenseNet(block_config=block_config, pretrained_encoder=0, **kwargs)

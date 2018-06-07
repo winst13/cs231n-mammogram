@@ -158,25 +158,45 @@ class Swish(nn.Module):
 
 class _SimpleDenseLayer(nn.Sequential):
 
-    def __init__(self, params):
+    def __init__(self, num_input_features, growth_rate, drop_rate):
         super(_SimpleDenseLayer, self).__init__()
+        self.add_module('norm', nn.BatchNorm2d(num_input_features)),
+        self.add_module('swish', Swish()),
+        self.add_module('conv', nn.Conv2d(num_input_features, growth_rate,
+                        kernel_size=3, stride=1, padding=1, bias=False)),
+        self.drop_rate = drop_rate
+
+    def forward(self, x):
+        new_features = super(_SimpleDenseLayer, self).forward(x)
+        if self.drop_rate > 0:
+            new_features = F.dropout(new_features, p=self.drop_rate, training=self.training)
+        return torch.cat([x, new_features], 1)
 
 
 class _SimpleDenseBlock(nn.Sequential):
 
-    def __init__(self, params):
+    def __init__(self, num_layers, num_input_features, growth_rate, drop_rate):
         super(_SimpleDenseBlock, self).__init__()
+        for i in range(num_layers):
+            layer = _SimpleDenseLayer(num_input_features + i*growth_rate, growth_rate, drop_rate)
+            self.add_module('denselayer%d' % (i+1), layer)
 
-    def forward(self, x):
-        pass
+
+class _SimpleTransition(nn.Sequential):
+    def __init__(self, num_input_features):
+        super(_SimpleTransition, self).__init__()
+        self.add_module('norm', nn.BatchNorm2d(num_input_features))
+        self.add_module('swish', Swish())
+        self.add_module('pool', nn.AvgPool2d(kernel_size=2, stride=2))
 
 
 class MammogramDenseNet(nn.Module):
-    """ Description
+    """ More true to the original DenseNet architecture, reusing the Pytorch
+        implementations of the DenseLayer and DenseBlock.
     """
-
+    
     def __init__(self, growth_rate=32, block_config=(6,12,18,12),
-                 bn_size=4, drop_rate=0., pretrained_encoder=2, debug=False):
+                 bn_size=4, drop_rate=0., pretrained_encoder=2, simple=False, debug=False):
         """
         bn_size = bottleneck size, the factor by which the first conv in a _DenseLayer
             is larger than the second conv.
@@ -232,7 +252,11 @@ class MammogramDenseNet(nn.Module):
 
         # Add the rest of the architecture (Dense blocks, transition layers)
         for i, num_layers in enumerate(block_config):
-            block = _DenseBlock(num_layers=num_layers, num_input_features=num_features,
+            if simple:
+                block = _SimpleDenseBlock(num_layers=num_layers, num_input_features=num_features,
+                                          growth_rate=growth_rate, drop_rate=drop_rate)
+            else:
+                block = _DenseBlock(num_layers=num_layers, num_input_features=num_features,
                                 bn_size=bn_size, growth_rate=growth_rate, drop_rate=drop_rate)
 
             # Initialize the weights of block
@@ -244,16 +268,23 @@ class MammogramDenseNet(nn.Module):
                     nn.init.constant_(m.weight, 1)
                     nn.init.constant_(m.bias, 0)
 
-            self.features.add_module('denseblock%d' % (i + 1), block)
+            block_name = 'simpledenseblock%d' % (i + 1) if simple else 'denseblock%d' % (i + 1)
+            self.features.add_module(block_name, block)
             
             num_features = num_features + num_layers * growth_rate
             if debug: print("num features after denseblock %d:" % (i + 1), num_features)
 
             # Add a transition layer if not the last dense block:
-            #  Norm, 1x1 Conv, (activation), AvgPool
+            #  Norm, 1x1 Conv (unless simple), activation, AvgPool
             if i != self.nb_dense_blocks - 1:
-                trans = _Transition(num_input_features=num_features, num_output_features=num_features)
-                self.features.add_module('transition%d' % (i + 1), trans)
+                if simple:
+                    trans = _SimpleTransition(num_input_features=num_features)
+                else:
+                    trans = _Transition(num_input_features=num_features, num_output_features=num_features)
+
+                transition_name = 'simpletransition%d' % (i + 1) if simple else 'transition%d' % (i + 1)
+                self.features.add_module(transition_name, trans)
+                
                 if debug: print("num features after transition %d:" % (i + 1), num_features)
 
         if debug: print("final num features:", num_features)
