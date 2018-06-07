@@ -19,7 +19,7 @@ if __name__ == "__main__":
     load_model('dense_060518', model, optimizer, mode='best') # rehydrate model
     del optimizer # goodbye
 
-    filename = "Mass-Test_P_01617_LEFT_CC.npy"
+    filename = "Mass-Test_P_01617_LEFT_CC.npy" # This is label 1
     imagepath = join("visualize_input", filename)
     savepath = join("visualize_output", filename[:-4] + "_saliency.png")
     create_saliency_overlay(model, imagepath, savepath)
