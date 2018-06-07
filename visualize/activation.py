@@ -22,11 +22,10 @@ def get_activation(model, layer, image, device = torch.device('cuda'), dtype = t
     for module_pos, module in model.features._modules.items():
         if "denseblock" in module_pos:
             for module_1 in module.modules():
-                print (module_1)
                 if layer in module_1:
                     x = module_1(x)
                     conv_output.append(x)
-                elif "denselayer" in module_1:
+                elif "DenseLayer" in module_1:
                     for module_2 in module_1.modules():
                         if layer in module_2:
                             x = module_2(x)
