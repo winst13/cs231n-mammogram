@@ -243,5 +243,8 @@ if mode == 'train':
     train(loader_train, loader_val, model, optimizer, epoch, loss_list = loss_list, val_acc_list = val_acc_list)
 elif mode == 'tiny':
     train(loader_tiny_train, loader_tiny_val, model, optimizer, epoch, loss_list = loss_list, val_acc_list = val_acc_list)
+elif mode == 'test':
+    acc = check_accuracy(loader_test, model)
+    print (acc)
         
 
