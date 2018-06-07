@@ -24,8 +24,9 @@ def load_model(exp_name, model, optimizer, mode = 'checkpoint', lr = None):
         epoch = checkpoint['epoch']
         model.load_state_dict(checkpoint['state_dict'])
         if lr is not None:
-            print ("original learning rate ", checkpoint['optimizer']['lr'])
-            checkpoint['optimizer']['lr'] = lr
+            for param_group in optimizer.param_groups:
+                print ("lr = ", param_group['lr'])
+                param_group['lr'] = lr
         optimizer.load_state_dict(checkpoint['optimizer'])
         loss_list = checkpoint['loss_list']
         val_acc_list = checkpoint['val_acc_list']
