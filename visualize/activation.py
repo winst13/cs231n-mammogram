@@ -17,6 +17,8 @@ def get_activation(model, layer, image):
     # Forward pass on the convolutions
     conv_output = None
     x = torch.from_numpy(image).unsqueeze(0)
+    print (model(x))
+    '''
     for module_pos, module in model.features._modules.items():
         x = module(x)  # Forward
         if int(module_pos) == layer:
@@ -29,3 +31,4 @@ def get_activation(model, layer, image):
     activation = (activation - np.min(activation)) / (np.max(activation) - np.min(activation))  # Normalize between 0-1
     activation = np.uint8(cam * 255)  # Scale between 0-255 to visualize
     return activation
+    '''
