@@ -1,5 +1,7 @@
 import torch
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')
 from matplotlib import pyplot as plt
 
 from util.util import print
@@ -19,14 +21,15 @@ def get_gradient(model, x):
     # Freeze params, we're not updating weights
     for p in model.parameters():
         p.requires_grad = False
+    #print("x requires grad is:", x.requires_grad) True
     
     try:
         scores = model(x)
     except RuntimeError:
         model = model.cuda()
-        x = x.cuda()
-        x.requires_grad = True
-        scores = model(x)
+        scores = model(x.cuda())
+    
+    print("We received score(s) ", scores)
     scores.backward()
 
     gradient = x.grad
@@ -53,6 +56,7 @@ def save_saliency_and_image(tensor, image, savepath):
     plt.imshow(image, cmap='gray')
     plt.imshow(tensor, cmap='hot', alpha=0.7)
     plt.savefig(savepath)
+    print("Saved image to", savepath)
 
 
 def create_saliency_overlay(model, imagepath, savepath):
@@ -64,6 +68,7 @@ def create_saliency_overlay(model, imagepath, savepath):
     """
     assert imagepath.endswith('.npy')
     image = np.load(imagepath)
+    print("Loaded image from", imagepath)
 
     x = image.reshape(1, 1, 1024, 1024)
     raw_gradient = get_gradient(model, x)
