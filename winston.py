@@ -4,6 +4,7 @@ from torch import optim
 
 from os.path import join
 import matplotlib.pyplot as plt
+plt.switch_backend('agg')
 from PIL import Image
 
 from model.mammogram_densenet import MammogramDenseNet
