@@ -18,7 +18,7 @@ def save_activations(conv_layer_list, conv_output, dir_path = "visualize_output/
         for i in range(len(output)):
             print ("saving: ", join(dir_path, name+"_"+str(i)+".png"))
             print (output[i].shape)
-            imsave(join(dir_path, name+"_"+str(i)".png"), output[i].detach())
+            imsave(join(dir_path, name+"_"+str(i)+".png"), output[i].detach())
 
 def get_activation(model, layer, image, device = torch.device('cuda'), dtype = torch.float32):
     model.eval()
