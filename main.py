@@ -223,7 +223,7 @@ elif model_name == "reducedense3333":
     model = get_reduced_densenet(block_config=(3,3,3,3), drop_rate=dropout)
 elif model_name == "nopretraindense":
     model = get_nopretrain_densenet(drop_rate=dropout)
-elif model_name == "simpledense"
+elif model_name == "simpledense":
     model = get_simple_densenet(drop_rate=dropout)
 else:
     print ("bad --model parameter")
