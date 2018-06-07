@@ -15,6 +15,7 @@ def get_f_beta(truepos, falsepos, trueneg, falseneg, beta = 1):
     return float(numerator)/float(denomenator)
 
 def get_precision(truepos, falsepos, trueneg, falseneg):
-    
+    return float(truepos)/float(truepos + falsepos)
 
 def get_recall(truepos, falsepos, trueneg, falseneg):
+    return float(truepos)/float(truepos + falseneg)
