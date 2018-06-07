@@ -17,7 +17,7 @@ def save_activations(conv_layer_list, conv_output, dir_path = "visualize_output/
         output = output.squeeze(0)
         for i in range(len(output)):
             filename = join("./"+dir_path, name+"_"+str(i)+".png")
-            with open(filename, 'w+') as file:
+            with open(filename, 'w+b') as file:
                 print ("saving: ", filename)
                 print (output[i].shape)
                 imsave(file, output[i].detach())
