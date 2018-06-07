@@ -23,9 +23,9 @@ def load_model(exp_name, model, optimizer, mode = 'checkpoint', lr = None):
         checkpoint = torch.load(filepath)
         epoch = checkpoint['epoch']
         model.load_state_dict(checkpoint['state_dict'])
-        if lr is not None:
-            for param_group in optimizer.param_groups:
-                print ("lr = ", param_group['lr'])
+        for param_group in optimizer.param_groups:
+            print ("lr = ", param_group['lr'])
+            if lr is not None:
                 param_group['lr'] = lr
         optimizer.load_state_dict(checkpoint['optimizer'])
         loss_list = checkpoint['loss_list']

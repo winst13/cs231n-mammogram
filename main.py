@@ -255,9 +255,9 @@ elif mode == 'tiny':
     train(loader_tiny_train, loader_tiny_val, model, optimizer, epoch, loss_list = loss_list, val_acc_list = val_acc_list)
 elif mode == 'test':
     acc = check_accuracy(loader_test, model)
-    save_plot(loss_list, epoch)
+    save_plot(loss_list, epoch, exp_name, "train_loss")
     if not no_val_list:
-        save_plot(val_acc_list, epoch)
+        save_plot(val_acc_list, epoch, exp_name, "val_acc")
     print (acc)
         
 
