@@ -21,7 +21,7 @@ def get_activation(model, layer, image, device = torch.device('cuda'), dtype = t
     
     for module_pos, module in model.features._modules.items():
         x = module(x)  # Forward
-        if int(module_pos) == layer:
+        if module_pos == layer:
             print (x)
             conv_output.append(x)  # Save the convolution output on that layer
                 
