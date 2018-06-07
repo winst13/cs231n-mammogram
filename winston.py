@@ -21,6 +21,7 @@ if __name__ == "__main__":
     load_model('dense_dropout', model, optimizer, mode='best') # rehydrate model
     del optimizer # goodbye
     print (model)
+    model.cuda()
 
     filename = "Mass-Test_P_01617_LEFT_CC.npy"
     imagepath = join("data/test/1", filename)
