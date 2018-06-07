@@ -30,6 +30,9 @@ if __name__ == "__main__":
     plt.imshow(arr, cmap='gray')
     plt.show()
     
+    for parameter in model.parameters():
+        print(parameter)
+    
     '''
     for layer in model:
         activation = get_activation(model, layer, arr)
