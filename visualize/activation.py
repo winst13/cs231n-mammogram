@@ -24,12 +24,14 @@ def get_activation(model, layer, image, device = torch.device('cuda'), dtype = t
         if module_pos == layer:
             print (x)
             conv_output.append(x)  # Save the convolution output on that layer
-                
-    activation = conv_output.data.numpy()[0]
-    #resize to 1024x1024?
-    activation = np.maximum(activation, 0)
-    activation = (activation - np.min(activation)) / (np.max(activation) - np.min(activation))  # Normalize between 0-1
-    activation = np.uint8(cam * 255)  # Scale between 0-255 to visualize
-    print (activation)
-    return activation
+        
+    for output in conv_output:
+        print (output.shape)
+        activation = output.data.numpy()[0]
+        #resize to 1024x1024?
+        activation = np.maximum(activation, 0)
+        activation = (activation - np.min(activation)) / (np.max(activation) - np.min(activation))  # Normalize between 0-1
+        activation = np.uint8(cam * 255)  # Scale between 0-255 to visualize
+        print (activation)
+        return activation
     
