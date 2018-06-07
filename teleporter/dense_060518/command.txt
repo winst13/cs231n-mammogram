@@ -1,0 +1,1 @@
+python3 main.py --mode=train --save_every=1 --print_every=1 --exp_name=dense --model=reducedense --batch_size=5 --lr=1e-3
