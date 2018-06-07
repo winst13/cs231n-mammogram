@@ -4,7 +4,7 @@ from torch import optim
 
 from os.path import join
 import matplotlib.pyplot as plt
-from skimage.io import imsave
+from scipy.misc import imsave
 
 from model.mammogram_densenet import MammogramDenseNet
 from model import helper
@@ -16,9 +16,11 @@ def save_activations(conv_layer_list, conv_output, dir_path = "visualize_output/
     for name, output in zip(conv_layer_list, conv_output):
         output = output.squeeze(0)
         for i in range(len(output)):
-            print ("saving: ", join("./"+dir_path, name+"_"+str(i)+".png"))
-            print (output[i].shape)
-            imsave(join("./"+dir_path, name+"_"+str(i)+".png"), output[i].detach())
+            filename = join("./"+dir_path, name+"_"+str(i)+".png")
+            with open(filename, 'w+') as file
+                print ("saving: ", filename)
+                print (output[i].shape)
+                imsave(file, output[i].detach())
 
 def get_activation(model, layer, image, device = torch.device('cuda'), dtype = torch.float32):
     model.eval()
@@ -51,7 +53,7 @@ def get_activation(model, layer, image, device = torch.device('cuda'), dtype = t
         #resize to 1024x1024?
         activation = np.maximum(activation, 0)
         activation = (activation - np.min(activation)) / (np.max(activation) - np.min(activation))  # Normalize between 0-1
-        #activation = np.uint8(activation * 255)  # Scale between 0-255 to visualize
+        activation = np.uint8(activation * 255)  # Scale between 0-255 to visualize
         print (layer_name)
         print (activation)
     return conv_layer_list, conv_output
