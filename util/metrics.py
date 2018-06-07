@@ -38,3 +38,4 @@ def save_plot(loss_list, epochs, exp_name, mode):
     plt.plot(time, loss_list)
     save_path = join(asset_path, exp_name, mode)
     plt.savefig(save_path, bbox_inches='tight')
+    plt.gcf().clear()
