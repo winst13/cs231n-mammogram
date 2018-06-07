@@ -24,6 +24,7 @@ def get_activation(model, layer, image, device = torch.device('cuda'), dtype = t
         print (module_pos)
         if "conv" in module_pos:
             x = module(x)
+            conv_output.append(x)
             conv_layer_list.append(module_pos)
         elif "transition" in module_pos:
             for module_pos_1, module_1 in module._modules.items():
