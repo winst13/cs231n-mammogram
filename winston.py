@@ -31,6 +31,4 @@ if __name__ == "__main__":
     plt.imshow(arr, cmap='gray')
     plt.show()
     
-    activation0 = get_activation(model, "conv0", arr)
-    activation1 = get_activation(model, "conv1", arr)
-    activation2 = get_activation(model, "conv2", arr)
+    activation0 = get_activation(model, "conv", arr)
