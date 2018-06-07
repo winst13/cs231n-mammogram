@@ -6,8 +6,7 @@ from torchvision.models.densenet import _DenseBlock, _Transition
 def get_simple_densenet(block_config=(3,3,3,3,3), **kwargs):
     model = MammogramDenseNet(block_config=block_config, pretrained_encoder=1, simple=True, **kwargs)
     # The simple layers already have swish!
-    print("Returned simple dense architecture:")
-    print(model)
+    replace_relu_with_swish(model)
     return model
 
 def get_nopretrain_densenet(block_config=(3,3,3,3), **kwargs):
