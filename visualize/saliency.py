@@ -18,7 +18,10 @@ def get_gradient(model, x):
     for p in model.parameters():
         p.requires_grad = False
     
-    scores = model(x)
+    try:
+        scores = model(x)
+    except RuntimeError:
+        scores = model.cuda()(x)
     scores.backward()
 
     gradient = x.grad
