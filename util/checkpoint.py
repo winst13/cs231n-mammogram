@@ -38,9 +38,10 @@ def load_model(exp_name, model, optimizer, mode = 'checkpoint', lr = None):
         print("=> loaded checkpoint '{}' (epoch {})"
               .format(filepath, checkpoint['epoch']))
         
-        return 
-            (epoch, loss_list, val_acc_list) if val_acc_list is not None else
-            (epoch, loss_list)
+        if val_acc_list is not None:
+            return epoch, loss_list, val_acc_list
+        else:
+            return epoch, loss_list
     else:
         print("=> no checkpoint found at '{}'".format(filepath))
         return None
