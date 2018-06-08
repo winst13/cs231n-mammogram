@@ -33,8 +33,8 @@ if __name__ == "__main__":
 
     for filename in filename_list:
         imagepath = join("visualize_input", filename)
-        savepath = join("visualize_output", "saliency", filename[:-4], "saliency.png")
-        create_saliency_overlay(model, imagepath, savepath)
+        savepath = join("visualize_output", "saliency", filename[:-4], "ONLYsaliency.png")
+        create_saliency_overlay(model, imagepath, savepath, only_saliency=True)
 
 
     """

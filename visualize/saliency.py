@@ -42,7 +42,7 @@ def get_gradient(model, x):
     return gradient
 
 
-def save_saliency_and_image(tensor, image, savepath):
+def save_saliency_and_image(tensor, image, savepath, only_saliency=False):
     """ Take in a saliency map tensor, and output as img array. Save if option provided.
     Batch size should not exist, ideally.
     Params:
@@ -55,13 +55,16 @@ def save_saliency_and_image(tensor, image, savepath):
     assert savepath.startswith("visualize_output/")
 
     # https://stackoverflow.com/questions/31877353/overlay-an-image-segmentation-with-numpy-and-matplotlib
-    plt.imshow(image, cmap='gray')
-    plt.imshow(tensor, cmap='hot', alpha=0.7)
+    if only_saliency:
+        plt.imshow(tensor, cmap='hot')
+    else:
+        plt.imshow(image, cmap='gray')
+        plt.imshow(tensor, cmap='hot', alpha=0.7)
     plt.savefig(savepath)
     print("Saved image to", savepath)
 
 
-def create_saliency_overlay(model, imagepath, savepath):
+def create_saliency_overlay(model, imagepath, savepath, only_saliency=False):
     """
     Params:
         :model: pytorch model for this scope, e.g. MammogramDenseNet
@@ -77,6 +80,6 @@ def create_saliency_overlay(model, imagepath, savepath):
     saliency_tensor = raw_gradient.numpy().reshape(1024, 1024)
     saliency_tensor = normalize_between(saliency_tensor, 0, 1)
 
-    save_saliency_and_image(saliency_tensor, image, savepath)
+    save_saliency_and_image(saliency_tensor, image, savepath, only_saliency=only_saliency)
 
 
