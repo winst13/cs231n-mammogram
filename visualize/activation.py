@@ -12,7 +12,8 @@ from util.image import normalize_between
 from util.checkpoint import load_model
 
 
-def save_activations(conv_layer_list, conv_output, dir_path = "visualize_output/activations"):
+def save_activations(conv_layer_list, conv_output, filename, dir_path = "visualize_output/activations"):
+    dir_path = join(dirpath, filename)
     for name, output in zip(conv_layer_list, conv_output):
         output = output.squeeze(0)
         for i in range(len(output)):

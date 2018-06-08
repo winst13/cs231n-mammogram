@@ -2,6 +2,7 @@ import numpy as np
 import torch
 from torch import optim
 
+import os
 from os.path import join
 import matplotlib.pyplot as plt
 plt.switch_backend('agg')
@@ -23,13 +24,14 @@ if __name__ == "__main__":
     print (model)
     model.cuda()
 
-    filename = "Mass-Test_P_01617_LEFT_CC.npy"
-    imagepath = join("data/test/1", filename)
-    savepath = join("visualize_output", filename[:-4] + "_activation.png")
+    directory = "visualize_input"
+    for filename in os.listdir(directory):
+        if filename.endswith(".npy"):
+            imagepath = join(directory, filename)
     
-    arr = np.load(imagepath)
-    plt.imshow(arr, cmap='gray')
-    plt.show()
+            arr = np.load(imagepath)
+            plt.imshow(arr, cmap='gray')
+            plt.show()
     
-    conv_layer_list, conv_output = get_activation(model, "conv", arr)
-    save_activations(conv_layer_list, conv_output)
+            conv_layer_list, conv_output = get_activation(model, "conv", arr)
+            save_activations(conv_layer_list, conv_output, filename[:-4])
