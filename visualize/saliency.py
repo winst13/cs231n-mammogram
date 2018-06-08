@@ -54,7 +54,7 @@ def save_saliency_and_image(tensor, image, savepath):
 
     # https://stackoverflow.com/questions/31877353/overlay-an-image-segmentation-with-numpy-and-matplotlib
     plt.imshow(image, cmap='gray')
-    plt.imshow(tensor, cmap='hot', alpha=0.7)
+    plt.imshow(tensor, cmap='hot', alpha=0.6)
     plt.savefig(savepath)
     print("Saved image to", savepath)
 

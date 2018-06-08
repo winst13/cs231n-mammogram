@@ -238,7 +238,6 @@ class MammogramDenseNet(nn.Module):
         if debug:
             print("pretrained_encoder = %d" % pretrained_encoder)
             print("Output shape after the pretrained modules (batch, channels, H, W):")
-            # summary() printout takes a lot of time, but more comprehensive info
 
             test_input = torch.rand(1,1,1024,1024)
             test_output = self.features(test_input)
