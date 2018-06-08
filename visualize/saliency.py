@@ -5,6 +5,7 @@ matplotlib.use('Agg')
 from matplotlib import pyplot as plt
 
 from util.util import print
+from util.image import normalize_between
 
 
 def get_gradient(model, x):
@@ -37,6 +38,7 @@ def get_gradient(model, x):
 
     gradient = gradient.abs_().mean(1) # 1 = channel dim, (-1, 1024, 1024)
     print("After processing (absval + mean):", gradient.size())
+
     return gradient
 
 
@@ -54,7 +56,7 @@ def save_saliency_and_image(tensor, image, savepath):
 
     # https://stackoverflow.com/questions/31877353/overlay-an-image-segmentation-with-numpy-and-matplotlib
     plt.imshow(image, cmap='gray')
-    plt.imshow(tensor, cmap='hot', alpha=0.6)
+    plt.imshow(tensor, cmap='hot', alpha=0.7)
     plt.savefig(savepath)
     print("Saved image to", savepath)
 
@@ -73,6 +75,7 @@ def create_saliency_overlay(model, imagepath, savepath):
     x = image.reshape(1, 1, 1024, 1024)
     raw_gradient = get_gradient(model, x)
     saliency_tensor = raw_gradient.numpy().reshape(1024, 1024)
+    saliency_tensor = normalize_between(saliency_tensor, 0, 1)
 
     save_saliency_and_image(saliency_tensor, image, savepath)
 
