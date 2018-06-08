@@ -21,7 +21,7 @@ if __name__ == "__main__":
     model = helper.get_simple_densenet()
     # This is a dummy optimizer
     optimizer = optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=1e-3, betas = (0.9, 0.999), weight_decay=0)
-    load_model('dense_060518', model, optimizer, mode='best') # rehydrate model
+    load_model('simple_060718', model, optimizer, mode='best') # rehydrate model
     del optimizer # goodbye
 
     filename_list = [
@@ -35,7 +35,6 @@ if __name__ == "__main__":
         imagepath = join("visualize_input", filename)
         savepath = join("visualize_output", "saliency", filename[:-4], "saliency.png")
         create_saliency_overlay(model, imagepath, savepath)
-    """
 
 
     """
