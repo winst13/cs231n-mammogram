@@ -15,7 +15,7 @@ from visualize.activation import get_activation, save_activations
 
 
 if __name__ == "__main__":
-    model = helper.get_reduced_densenet()
+    model = helper.get_simple_densenet()
     # This is a dummy optimizer
     optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=1e-3, betas = (0.9, 0.999), weight_decay=0)
     load_model('dense_dropout', model, optimizer, mode='best') # rehydrate model
