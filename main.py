@@ -192,7 +192,9 @@ def check_accuracy(loader, model, cutoff = 0.5):
     print ("tp = %d, fp = %d, tn = %d, fn = %d, tot = %d"%(tot_truepos, tot_falsepos, tot_trueneg, tot_falseneg, tot_samples))
     assert (tot_truepos + tot_falsepos + tot_trueneg + tot_falseneg) == tot_samples
     f1 = get_f_beta(tot_truepos, tot_falsepos, tot_trueneg, tot_falseneg)
+    f2 = get_f_beta(tot_truepos, tot_falsepos, tot_trueneg, tot_falseneg, beta=2)
     print ("f1 score = %06f"%(f1))
+    print ("f2 score = %06f"%(f2))
     precision = get_precision(tot_truepos, tot_falsepos, tot_trueneg, tot_falseneg)
     recall = get_recall(tot_truepos, tot_falsepos, tot_trueneg, tot_falseneg)
     print ("precision = %06f, recall = %06f"%(precision, recall))
