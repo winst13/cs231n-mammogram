@@ -41,13 +41,12 @@ def get_activation(model, layer, image, device = torch.device('cuda'), dtype = t
             for module_pos_1, module_1 in module._modules.items():
                 print ("\t", module_pos_1)
                 x = module_1(x)
-                if layer in module_pos_1:
+                if "denselayer" in module_pos_1:
                     conv_output.append(x)
                     conv_layer_list.append(module_pos+", "+module_pos_1)
         else:
             x = module(x)
     
-    '''
     for layer_name, output in zip(conv_layer_list, conv_output):
         print (output.shape)
         activation = output.cpu().data.numpy()[0]
@@ -58,5 +57,4 @@ def get_activation(model, layer, image, device = torch.device('cuda'), dtype = t
         print (layer_name)
         print (activation)
     return conv_layer_list, conv_output
-    '''
     
