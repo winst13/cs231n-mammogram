@@ -13,7 +13,7 @@ from util.checkpoint import load_model
 
 
 def save_activations(conv_layer_list, conv_output, filename, dir_path = "visualize_output/activations"):
-    dir_path = join(dirpath, filename)
+    dir_path = join(dir_path, filename)
     for name, output in zip(conv_layer_list, conv_output):
         output = output.squeeze(0)
         for i in range(len(output)):
